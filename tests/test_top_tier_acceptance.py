@@ -330,8 +330,7 @@ def test_default_count_is_five():
 
     Given  the tool flags --download-top-tier is being used without --count,
     When   it reads the built-in default,
-    Then   the default number of providers to download is 5 (a variety of what's
-           popular now), not 1.
+    Then   the default number of agent files to download is 5, not 1.
     """
     # Read the launcher's own help and confirm --count's default is 5, tolerating
     # the argparse line-wrap of "default 5" (which may split across lines).
@@ -404,10 +403,10 @@ def test_cli_download_top_tier_dry_run_detailed():
     assert "total RAM" in s, "dry run must print the dynamic total-RAM readout"
     assert "headroom" in s, "dry run must print the headroom readout"
     assert "would download top" in s, f"must print '[dry] would download top N'; got:\n{s[-800:]}"
-    # --count 2 => up to 2 providers x per-provider(2) = up to 4 candidate rows
+    # --count 2 => at most 2 AGENT files (issue #76/#77)
     lines = [ln for ln in s.splitlines() if "->" in ln and ".gguf" in ln]
     assert lines, f"dry run must list candidate rows with provider::file -> path; got:\n{s[-800:]}"
-    assert len(lines) <= 4, f"--count 2 with per-provider 2 => <=4 rows, got {len(lines)}"
+    assert len(lines) <= 2, f"--count 2 => <=2 agent files, got {len(lines)}"
     for ln in lines[:2]:
         assert "/" in ln, f"candidate row must show provider repo: {ln}"
         assert ".gguf" in ln, f"candidate row must name the .gguf file: {ln}"
@@ -435,8 +434,8 @@ def test_family_dry_run_known_lowend_one_provider():
     When   it runs `--download-top-tier --family qwen --count 1 --dry` (real HF
            family search, no download because --dry),
     Then   it exits 0, prints the `[family] qwen ... match` line and the dynamic
-           memory readout, lists at most 1 provider x per_provider(2) = 2
-           candidate rows each `owner/repo -> <TierGB>/<file>`, confirms nothing
+           memory readout, lists at most 1 agent file (`--count 1`),
+           each `owner/repo -> <TierGB>/<file>`, confirms nothing
            was downloaded or served, and spawns no server.
     """
     _real_hf()
@@ -454,10 +453,10 @@ def test_family_dry_run_known_lowend_one_provider():
     assert "match" in s, f"the family readout must report the match count: {s[-400:]}"
     assert "total RAM" in s, "dry run must print the dynamic total-RAM readout"
     assert "headroom" in s, "dry run must print the headroom readout"
-    # candidate rows: at most 1 provider x per_provider(2) = 2
+    # candidate rows: --count 1 => at most 1 agent file
     lines = [ln for ln in s.splitlines() if " -> " in ln and ".gguf" in ln]
     assert lines, f"dry run must list candidate rows; got:\n{s[-800:]}"
-    assert len(lines) <= 2, f"--count 1 with per-provider 2 => <=2 rows, got {len(lines)}"
+    assert len(lines) <= 1, f"--count 1 => <=1 agent file, got {len(lines)}"
     for ln in lines:
         assert "/" in ln, f"candidate row must show the provider repo: {ln}"
         assert ".gguf" in ln, f"candidate row must name the .gguf file: {ln}"

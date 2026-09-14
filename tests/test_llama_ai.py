@@ -375,7 +375,7 @@ def test_discover_top_tier_min_trending_score_filters(monkeypatch):
         return repos
 
     def fake_files(repo):
-        return [{"path": f"{repo.split('/')[-1]}-Q8_0.gguf", "size_bytes": 5 * 1024 ** 3,
+        return [{"path": f"{repo.split('/')[-1]}-Instruct-Q8_0.gguf", "size_bytes": 5 * 1024 ** 3,
                  "size_gb": 5.0}]
 
     monkeypatch.setattr(llama_ai, "_trending_gguf_repos", fake_trending)
@@ -412,16 +412,16 @@ def test_discover_top_tier_high_and_lower_per_provider(monkeypatch):
 
     files_by_repo = {
         "unsloth/Qwen3.8-27B-GGUF": [
-            {"path": "model-Q8_0.gguf", "size_bytes": 20 * 1024 ** 3, "size_gb": 20.0},
-            {"path": "model-Q4_K_M.gguf", "size_bytes": 12 * 1024 ** 3, "size_gb": 12.0},  # clearly lower
+            {"path": "model-Instruct-Q8_0.gguf", "size_bytes": 20 * 1024 ** 3, "size_gb": 20.0},
+            {"path": "model-Instruct-Q4_K_M.gguf", "size_bytes": 12 * 1024 ** 3, "size_gb": 12.0},
         ],
         "unsloth/Qwen3.8-27B-UD-GGUF": [
-            {"path": "model-Q6_K.gguf", "size_bytes": 16 * 1024 ** 3, "size_gb": 16.0},
-            {"path": "model-Q3_K_S.gguf", "size_bytes": 9 * 1024 ** 3, "size_gb": 9.0},
+            {"path": "model-Instruct-Q6_K.gguf", "size_bytes": 16 * 1024 ** 3, "size_gb": 16.0},
+            {"path": "model-Instruct-Q3_K_S.gguf", "size_bytes": 9 * 1024 ** 3, "size_gb": 9.0},
         ],
         "orcarouter/Qwen3.8-27B-Uncensored-GGUF": [
-            {"path": "model-Q8_0.gguf", "size_bytes": 20 * 1024 ** 3, "size_gb": 20.0},
-            {"path": "model-Q4_K_M.gguf", "size_bytes": 12 * 1024 ** 3, "size_gb": 12.0},
+            {"path": "model-Instruct-Q8_0.gguf", "size_bytes": 20 * 1024 ** 3, "size_gb": 20.0},
+            {"path": "model-Instruct-Q4_K_M.gguf", "size_bytes": 12 * 1024 ** 3, "size_gb": 12.0},
         ],
     }
 
@@ -471,8 +471,8 @@ def test_discover_drops_low_fidelity_iq_quants(monkeypatch):
         if repo.startswith("ista"):
             return [{"path": "model-IQ3_S.gguf", "size_bytes": 9 * 1024 ** 3, "size_gb": 9.0},
                     {"path": "model-IQ2_XS.gguf", "size_bytes": 7 * 1024 ** 3, "size_gb": 7.0}]
-        return [{"path": "model-Q8_0.gguf", "size_bytes": 28 * 1024 ** 3, "size_gb": 28.0},
-                {"path": "model-Q6_K.gguf", "size_bytes": 21 * 1024 ** 3, "size_gb": 21.0}]
+        return [{"path": "model-Instruct-Q8_0.gguf", "size_bytes": 28 * 1024 ** 3, "size_gb": 28.0},
+                {"path": "model-Instruct-Q6_K.gguf", "size_bytes": 21 * 1024 ** 3, "size_gb": 21.0}]
 
     monkeypatch.setattr(llama_ai, "_trending_gguf_repos", fake_trending)
     monkeypatch.setattr(llama_ai, "_repo_gguf_files", fake_files)
@@ -542,7 +542,7 @@ def test_fit_gate_rejects_too_big_model(monkeypatch):
         return repos
 
     def fake_files(repo):
-        return [{"path": "model-Q8_0.gguf", "size_bytes": 29 * 1024 ** 3, "size_gb": 29.0}]
+        return [{"path": "model-Instruct-Q8_0.gguf", "size_bytes": 29 * 1024 ** 3, "size_gb": 29.0}]
 
     monkeypatch.setattr(llama_ai, "_trending_gguf_repos", fake_trending)
     monkeypatch.setattr(llama_ai, "_repo_gguf_files", fake_files)
@@ -570,9 +570,9 @@ def test_lower_quant_keeps_comfortable_headroom(monkeypatch):
         return repos
 
     def fake_files(repo):
-        return [{"path": "model-Q8_0.gguf", "size_bytes": 18 * 1024 ** 3, "size_gb": 18.0},
-                {"path": "model-Q4_K_M.gguf", "size_bytes": 12 * 1024 ** 3, "size_gb": 12.0},
-                {"path": "model-Q3_K_M.gguf", "size_bytes": 9 * 1024 ** 3, "size_gb": 9.0}]
+        return [{"path": "model-Instruct-Q8_0.gguf", "size_bytes": 18 * 1024 ** 3, "size_gb": 18.0},
+                {"path": "model-Instruct-Q4_K_M.gguf", "size_bytes": 12 * 1024 ** 3, "size_gb": 12.0},
+                {"path": "model-Instruct-Q3_K_M.gguf", "size_bytes": 9 * 1024 ** 3, "size_gb": 9.0}]
 
     monkeypatch.setattr(llama_ai, "_trending_gguf_repos", fake_trending)
     monkeypatch.setattr(llama_ai, "_repo_gguf_files", fake_files)
@@ -742,8 +742,8 @@ def test_discover_top_tier_offers_and_places_large_model_on_big_card(monkeypatch
     repo = "unsloth/Qwen4-400B-GGUF"
     files_by_repo = {
         repo: [  # a 400 GB bf16 + a 200 GB lower quant, both only fit a big card
-            {"path": "model-BF16.gguf", "size_bytes": 400 * 1024 ** 3, "size_gb": 400.0},
-            {"path": "model-Q8_0.gguf", "size_bytes": 200 * 1024 ** 3, "size_gb": 200.0},
+            {"path": "model-Instruct-BF16.gguf", "size_bytes": 400 * 1024 ** 3, "size_gb": 400.0},
+            {"path": "model-Instruct-Q8_0.gguf", "size_bytes": 200 * 1024 ** 3, "size_gb": 200.0},
         ],
     }
 
@@ -827,7 +827,7 @@ def test_placement_fit_gate_and_folder_agree(monkeypatch):
         return [{"repo": repo, "downloads": 1, "likes": 1, "trendingScore": 900}]
 
     def fake_files(r):
-        return [{"path": f"m{s}.gguf", "size_bytes": int(s * 1024 ** 3), "size_gb": s}
+        return [{"path": f"m{s}-instruct.gguf", "size_bytes": int(s * 1024 ** 3), "size_gb": s}
                 for s in sizes]
 
     monkeypatch.setattr(llama_ai, "_trending_gguf_repos", fake_trending)
@@ -913,11 +913,11 @@ def test_mock_download_places_each_model_in_right_tier_dir(tmp_path, monkeypatch
     G = 1024 ** 3
     # 5 trending providers, each a realistic model spanning large -> small.
     repos_files = {
-        "unsloth/Qwen3.8-27B-GGUF":   {"trend": 281, "files": [("q8.gguf", 29.0), ("q6.gguf", 21.5)]},
-        "DavidAU/Qwen3.8-27B-GGUF":   {"trend": 221, "files": [("q8.gguf", 27.7), ("q5.gguf", 19.3)]},
-        "HauhauCS/Qwen3.8-27B-GGUF":  {"trend": 170, "files": [("q8.gguf", 29.3), ("q5.gguf", 18.8)]},
-        "OBLITERATUS/Qwen3.8-27B-GGUF": {"trend": 129, "files": [("q8.gguf", 27.1), ("q5.gguf", 18.2)]},
-        "orcarouter/Qwen3.8-27B-GGUF":{"trend": 114, "files": [("q8.gguf", 27.1), ("q5.gguf", 18.2)]},
+        "unsloth/Qwen3.8-27B-GGUF":   {"trend": 281, "files": [("instruct-q8.gguf", 29.0), ("instruct-q6.gguf", 21.5)]},
+        "DavidAU/Qwen3.8-27B-GGUF":   {"trend": 221, "files": [("instruct-q8.gguf", 27.7), ("instruct-q5.gguf", 19.3)]},
+        "HauhauCS/Qwen3.8-27B-GGUF":  {"trend": 170, "files": [("instruct-q8.gguf", 29.3), ("instruct-q5.gguf", 18.8)]},
+        "OBLITERATUS/Qwen3.8-27B-GGUF": {"trend": 129, "files": [("instruct-q8.gguf", 27.1), ("instruct-q5.gguf", 18.2)]},
+        "orcarouter/Qwen3.8-27B-GGUF":{"trend": 114, "files": [("instruct-q8.gguf", 27.1), ("instruct-q5.gguf", 18.2)]},
     }
     _mock_discovery(monkeypatch, repos_files)
     written = _mock_download_write_stub(monkeypatch, tmp_path)
@@ -946,9 +946,9 @@ def test_mock_download_picks_top5_by_trend_and_places(tmp_path, monkeypatch):
     assert the top-5 BY TREND (not by file size) are the ones actually placed (issue #49/#51)."""
     G = 1024 ** 3
     repos_files = {
-        "low_trend/Big":  {"trend": 10,  "files": [("q8.gguf", 400.0)]},
-        "high_trend/Small":{"trend": 999, "files": [("q8.gguf", 10.0)]},
-        "med/Both":       {"trend": 500, "files": [("q8.gguf", 100.0), ("q4.gguf", 50.0)]},
+        "low_trend/Big":  {"trend": 10,  "files": [("instruct-q8.gguf", 400.0)]},
+        "high_trend/Small":{"trend": 999, "files": [("instruct-q8.gguf", 10.0)]},
+        "med/Both":       {"trend": 500, "files": [("instruct-q8.gguf", 100.0), ("instruct-q4.gguf", 50.0)]},
     }
     _mock_discovery(monkeypatch, repos_files, min_gb=1.0)
     _mock_download_write_stub(monkeypatch, tmp_path)
@@ -980,9 +980,9 @@ def test_discover_skips_gated_repo_and_refills(tmp_path, monkeypatch):
     trending repos can't be downloaded (issue #53)."""
     G = 1024 ** 3
     repos_files = {
-        "good/A": {"trend": 900, "files": [("q8.gguf", 20.0)]},
-        "gated/B": {"trend": 800, "files": [("q8.gguf", 25.0)]},   # probe -> access-denied
-        "good/C": {"trend": 700, "files": [("q8.gguf", 30.0)]},
+        "good/A": {"trend": 900, "files": [("instruct-q8.gguf", 20.0)]},
+        "gated/B": {"trend": 800, "files": [("instruct-q8.gguf", 25.0)]},
+        "good/C": {"trend": 700, "files": [("instruct-q8.gguf", 30.0)]},
     }
     _mock_discovery(monkeypatch, repos_files, min_gb=1.0,
                     probe_result={"good/A": "ok", "gated/B": "access-denied", "good/C": "ok"})
@@ -1080,17 +1080,17 @@ FAMILY_QWEN_FILES = {
         ("qwen2.5-7b-instruct-q4_0.gguf", 4.7),
     ],
     "unsloth/Qwen3.8-27B-GGUF": [
-        ("Qwen3.8-27B-Q8_0.gguf", 29.0),
-        ("Qwen3.8-27B-Q5_K_M.gguf", 17.0),
+        ("Qwen3.8-27B-Instruct-Q8_0.gguf", 29.0),
+        ("Qwen3.8-27B-Instruct-Q5_K_M.gguf", 17.0),
         ("Qwen3.8-27B-IQ2_XXS.gguf", 8.0),    # low-fidelity: never picked
         ("mmproj-Qwen3.8-27B-f16.gguf", 0.5),  # projector: never picked
     ],
-    "bartowski/Qwen3.8-27B-GGUF": [("Qwen3.8-27B-Q8_0.gguf", 29.0)],
+    "bartowski/Qwen3.8-27B-GGUF": [("Qwen3.8-27B-Instruct-Q8_0.gguf", 29.0)],
     "orcarouter/Qwen3.8-27B-Uncensored-GGUF": [
-        ("Qwen3.8-27B-Uncensored-Q8_0.gguf", 29.0)],
+        ("Qwen3.8-27B-Instruct-Uncensored-Q8_0.gguf", 29.0)],
     "maddes/Another-Qwen-GGUF": [
-        ("another-qwen-Q6_K.gguf", 12.0),
-        ("another-qwen-Q4_K_M.gguf", 8.5),
+        ("another-qwen-instruct-Q6_K.gguf", 12.0),
+        ("another-qwen-instruct-Q4_K_M.gguf", 8.5),
     ],
     "Qwen/Qwen2.5-0.5B-Instruct-GGUF": [
         ("qwen2.5-0.5b-instruct-q4_0.gguf", 4.5),
@@ -1321,10 +1321,14 @@ def test_family_scope_mocked(monkeypatch):
     skip_summary = []
 
     # When family-mode discovery runs (--family qwen, --count 5, per_provider 2)
-    cands = llama_ai.discover_top_tier(limit=5 * 2, total_ram_bytes=total,
+    cands = llama_ai.discover_top_tier(limit=10, total_ram_bytes=total,
                                        headroom_bytes=head, min_trending_score=0,
                                        per_provider=2, skip_summary=skip_summary,
                                        family="qwen")
+    five = llama_ai.discover_top_tier(limit=5, total_ram_bytes=total,
+                                      headroom_bytes=head, min_trending_score=0,
+                                      per_provider=2, family="qwen")
+    assert len(five) <= 5, f"--count 5 must be at most 5 agent files, got {len(five)}"
 
     # Then 1. scope: only family-member repos appear — no substring trap leaked
     for c in cands:
@@ -1345,7 +1349,7 @@ def test_family_scope_mocked(monkeypatch):
     # Then 3. gated skip + refill: orcarouter absent, in the skip summary
     assert all(c["repo"] != "orcarouter/Qwen3.8-27B-Uncensored-GGUF" for c in cands)
     assert ("orcarouter/Qwen3.8-27B-Uncensored-GGUF",
-            "Qwen3.8-27B-Uncensored-Q8_0.gguf", "access-denied") in skip_summary
+            "Qwen3.8-27B-Instruct-Uncensored-Q8_0.gguf", "access-denied") in skip_summary
     # ...and the count refilled from the next fitting provider: 5 distinct
     #        providers (the 0.5B repo yields no candidate below the MIN floor)
     repos = {c["repo"] for c in cands}
@@ -1383,7 +1387,7 @@ def test_family_ranking_downloads_tiebreak(monkeypatch):
         {"repo": "low/DL", "downloads": 1000, "likes": 1, "trendingScore": 0},
         {"repo": "high/DL", "downloads": 900000, "likes": 1, "trendingScore": 0},
     ]
-    files = {"low/DL": [("q8.gguf", 20.0)], "high/DL": [("q8.gguf", 20.0)]}
+    files = {"low/DL": [("instruct-q8.gguf", 20.0)], "high/DL": [("instruct-q8.gguf", 20.0)]}
     _install_family_mocks(monkeypatch, repos, files)
 
     # When family-mode discovery returns them
@@ -1406,7 +1410,7 @@ def test_family_min_trending_score_ignored(monkeypatch):
         {"repo": "a/One", "downloads": 100, "likes": 1, "trendingScore": 0},
         {"repo": "b/Two", "downloads": 200, "likes": 1, "trendingScore": 0},
     ]
-    files = {"a/One": [("q8.gguf", 10.0)], "b/Two": [("q8.gguf", 10.0)]}
+    files = {"a/One": [("instruct-q8.gguf", 10.0)], "b/Two": [("instruct-q8.gguf", 10.0)]}
     _install_family_mocks(monkeypatch, repos, files)
 
     # When discovery runs in family mode with a high (would-exclude-all) floor
@@ -1450,11 +1454,11 @@ def test_family_one_provider_fewer_than_count_honest(monkeypatch):
 
     # Given a family with exactly ONE provider but --count 5 requested
     repos = [{"repo": "solo/Only", "downloads": 500, "likes": 1, "trendingScore": 0}]
-    files = {"solo/Only": [("q8.gguf", 20.0), ("q5.gguf", 13.0)]}
+    files = {"solo/Only": [("instruct-q8.gguf", 20.0), ("instruct-q5.gguf", 13.0)]}
     _install_family_mocks(monkeypatch, repos, files)
 
-    # When family-mode discovery asks for 5 providers
-    cands = llama_ai.discover_top_tier(limit=5 * 2, total_ram_bytes=48 * G,
+    # When family-mode discovery asks for 5 agent files
+    cands = llama_ai.discover_top_tier(limit=5, total_ram_bytes=48 * G,
                                        headroom_bytes=3 * G, min_trending_score=0,
                                        per_provider=2, family="qwen")
 
@@ -1481,7 +1485,7 @@ def test_discover_family_none_uses_trending(monkeypatch):
         return [{"repo": "fam/Repo", "downloads": 10, "likes": 1,
                  "trendingScore": 100}]
 
-    files = {"trend/Repo": [("q8.gguf", 10.0)], "fam/Repo": [("q8.gguf", 10.0)]}
+    files = {"trend/Repo": [("instruct-q8.gguf", 10.0)], "fam/Repo": [("instruct-q8.gguf", 10.0)]}
     _install_family_mocks(monkeypatch, [], files)  # installs _repo_gguf_files+probe
     monkeypatch.setattr(llama_ai, "_trending_gguf_repos", fake_trending)
     monkeypatch.setattr(llama_ai, "_family_gguf_repos", fake_family)
@@ -1495,3 +1499,78 @@ def test_discover_family_none_uses_trending(monkeypatch):
     assert trending_calls, "family=None must use _trending_gguf_repos"
     assert not family_calls, "family=None must never call _family_gguf_repos"
     assert [c["repo"] for c in cands] == ["trend/Repo"]
+
+
+def test_is_agent_gguf_word_boundary():
+    assert llama_ai.is_agent_gguf("Qwen/Qwen2.5-7B-Instruct-GGUF", "x.gguf")
+    assert llama_ai.is_agent_gguf("x/y", "foo-coder-Q8_0.gguf")
+    assert llama_ai.is_agent_gguf("x/y", "model-tool-Q4.gguf")
+    assert not llama_ai.is_agent_gguf("unsloth/Qwen3.8-27B-GGUF", "model-Q8_0.gguf")
+    assert not llama_ai.is_agent_gguf("x/y", "instructional-Q8.gguf")
+
+
+def test_discover_agent_filter_skips_base_iq_mmproj(monkeypatch):
+    """Issue #76/#77: only instruct/coder agent files; never pad with base/IQ2/mmproj."""
+    repos = [
+        {"repo": "a/Instruct-GGUF", "downloads": 1, "likes": 1, "trendingScore": 90},
+        {"repo": "b/Coder-GGUF", "downloads": 1, "likes": 1, "trendingScore": 80},
+        {"repo": "c/Base-GGUF", "downloads": 1, "likes": 1, "trendingScore": 70},
+        {"repo": "d/IQ-GGUF", "downloads": 1, "likes": 1, "trendingScore": 60},
+        {"repo": "e/Proj-GGUF", "downloads": 1, "likes": 1, "trendingScore": 50},
+    ]
+    files = {
+        "a/Instruct-GGUF": [{"path": "model-Instruct-Q8_0.gguf", "size_bytes": 8 * G, "size_gb": 8.0}],
+        "b/Coder-GGUF": [{"path": "foo-coder-Q5.gguf", "size_bytes": 7 * G, "size_gb": 7.0}],
+        "c/Base-GGUF": [{"path": "model-Q8_0.gguf", "size_bytes": 9 * G, "size_gb": 9.0}],
+        "d/IQ-GGUF": [{"path": "model-IQ2_XXS.gguf", "size_bytes": 8 * G, "size_gb": 8.0}],
+        "e/Proj-GGUF": [{"path": "mmproj-f16.gguf", "size_bytes": 1 * G, "size_gb": 1.0}],
+    }
+
+    def fake_trending(limit=25):
+        return repos
+
+    def fake_files(repo):
+        return files[repo]
+
+    monkeypatch.setattr(llama_ai, "_trending_gguf_repos", fake_trending)
+    monkeypatch.setattr(llama_ai, "_repo_gguf_files", fake_files)
+    monkeypatch.setattr(llama_ai, "_probe_file_downloadable", lambda *a, **k: "ok")
+    monkeypatch.setattr(llama_ai, "MIN_TOP_TIER_GB", 1.0)
+    cands = llama_ai.discover_top_tier(limit=5, total_ram_bytes=48 * G,
+                                       headroom_bytes=3 * G, min_trending_score=0,
+                                       per_provider=2)
+    names = [c["filename"] for c in cands]
+    repos_out = [c["repo"] for c in cands]
+    assert "a/Instruct-GGUF" in repos_out and "b/Coder-GGUF" in repos_out
+    assert "c/Base-GGUF" not in repos_out
+    assert all("iq2" not in n.lower() for n in names)
+    assert all(not n.startswith("mmproj") for n in names)
+    assert all(llama_ai.is_agent_gguf(c["repo"], c["filename"]) for c in cands)
+
+
+def test_discover_count_is_files_not_providers_and_honest_shortfall(monkeypatch):
+    """--count 5 is five agent FILES; only two in the world → two, no padding."""
+    repos = [
+        {"repo": "a/Instruct-GGUF", "downloads": 1, "likes": 1, "trendingScore": 90},
+        {"repo": "b/Coder-GGUF", "downloads": 1, "likes": 1, "trendingScore": 80},
+    ]
+    files = {
+        "a/Instruct-GGUF": [{"path": "a-Instruct-Q8.gguf", "size_bytes": 8 * G, "size_gb": 8.0}],
+        "b/Coder-GGUF": [{"path": "b-coder-Q8.gguf", "size_bytes": 7 * G, "size_gb": 7.0}],
+    }
+
+    def fake_trending(limit=25):
+        return repos
+
+    def fake_files(repo):
+        return files[repo]
+
+    monkeypatch.setattr(llama_ai, "_trending_gguf_repos", fake_trending)
+    monkeypatch.setattr(llama_ai, "_repo_gguf_files", fake_files)
+    monkeypatch.setattr(llama_ai, "_probe_file_downloadable", lambda *a, **k: "ok")
+    monkeypatch.setattr(llama_ai, "MIN_TOP_TIER_GB", 1.0)
+    cands = llama_ai.discover_top_tier(limit=5, total_ram_bytes=48 * G,
+                                       headroom_bytes=3 * G, min_trending_score=0,
+                                       per_provider=2)
+    assert len(cands) == 2
+    assert {c["repo"] for c in cands} == {"a/Instruct-GGUF", "b/Coder-GGUF"}

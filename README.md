@@ -133,46 +133,30 @@ curl http://127.0.0.1:11434/v1/chat/completions \
   -d '{"model":"llm-local","messages":[{"role":"user","content":"hi"}]}'
 ```
 
-## Download the top-tier trending models that fit your GPU (`--download-top-tier`)
+## Download five top-tier **agent** models that fit (`--download-top-tier`)
 
-Discover and download the **currently-trending, top-tier** GGUF models (from the Hugging
-Face community that publishes GGUF for llama.cpp) that **fit the CPU/GPU card you actually
-have** — with KV-cache headroom so they *run*, not just download.
+Discover and download **agent** GGUFs (Instruct / Coder / tool-capable) that are trending,
+pass the junk gates, and **fit this card**. Default `--count 5` is **five files**, not five
+Hugging Face owners. This command **never starts `llama-server`** and **never compiles
+llama.cpp**. Serve with `llama-ai <name>` after the files are on disk.
 
 ```bash
-# list the top-tier trending models that fit the actual card (no download)
 llama-ai --download-top-tier --list
-# download 5 distinct providers x 2 quants (default): each provider's HIGH (Q8) + lower (Q6/Q5)
-llama-ai --download-top-tier
-# download N providers' high + lower quants (--count) 
+llama-ai --download-top-tier              # up to 5 agent GGUFs that fit
 llama-ai --download-top-tier --count 3
-# just the best (high) quant per provider, no lower
 llama-ai --download-top-tier --per-provider 1
-# only consider models rated high enough (trendingScore floor)
-llama-ai --download-top-tier --min-trending-score 150
-# see what it would download without downloading
 llama-ai --download-top-tier --dry
 ```
 
-By default it aims for **5 distinct providers × 2 quants each** — the HIGH (Q8) plus a clearly-LOWER
-(Q4/Q5/Q6) quant per provider — **ranked by trending** (most popular now first, not by file size),
-and it **only downloads — it never auto-starts llama-server** (serve a downloaded model separately
-with `llama-ai <name>`). A failing provider is retried (up to 3×) without aborting the batch, and
-already-downloaded models are never re-fetched on a re-run (idempotent via HF content-hash). Live
-download progress shows a **0-100%** readout of the current file, and it uses HF's high-performance
-`hf-xet` transfer (fast for large files).
+CLI agents talk to `llm-local` on `:11434` themselves. This repo does not pack their context.
 
 How it decides "trending + top tier + fits":
 
 - **Trending** — a time-weighted Hugging Face popularity signal (`trendingScore`,
   `filter=gguf`), so you get what's hot *now*, not a lifetime download count.
-- **Top tier** — only flagship/large popular families (Qwen3, DeepSeek, Mistral, Llama,
-  Gemma, gpt-oss, Phi, QwQ, GLM, Olmo, plus trending additions Ornith/Qwopus/Qwythos/
-  Tiel-Coder/MiniMax/K2 so popular trending LLMs aren't dropped), and only non-trivial
-  quant files (no sub‑1B toy quants, no multi-file shards, no vision projectors) — plus
-  it drops **low-fidelity IQ1/IQ2/IQ3 quants** (an 8-11 GB "27B" is poor quality) and
-  **MTP/mtp-* companion heads** (multi-token-prediction aux files, not the serviceable
-  model), and still excludes non-LLM repos (TTS, image/audio encoders).
+- **Top tier** — flagship families as before, plus **agent-only**: repo or filename must
+  contain `instruct`, `coder`, or `tool` as a whole word. Base-only quants do not pad
+  the five. Still drops IQ1/2/3, MTP heads, shards, projectors, TTS/image.
 - **Fits with buffer** — the total memory comes from the **actual card** at runtime
   (`sysctl hw.memsize` on macOS, `/proc/meminfo` on Linux, or `LLAMA_RAM_BYTES`), with
   current-pressure headroom (`vm_stat`). Only models that leave a KV-cache reserve are
