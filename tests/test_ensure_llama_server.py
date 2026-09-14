@@ -48,6 +48,13 @@ def test_cmake_args_neither_fails():
     assert "openrouter" not in str(e.value).lower()
 
 
+def test_bad_llama_server_env_does_not_compile(tmp_path, monkeypatch):
+    monkeypatch.setenv("LLAMA_SERVER", str(tmp_path / "missing-bin"))
+    with pytest.raises(SystemExit) as e:
+        els.find_llama_server()
+    assert "not an executable" in str(e.value)
+
+
 def test_ensure_skips_build_when_binary_exists(tmp_path, monkeypatch):
     fake = tmp_path / "llama-server"
     fake.write_bytes(b"x")

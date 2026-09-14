@@ -31,7 +31,10 @@ def find_llama_server():
     if env:
         if os.path.isfile(env) and os.access(env, os.X_OK):
             return env
-        return None
+        raise SystemExit(
+            f"[ERROR] LLAMA_SERVER={env!r} is not an executable llama-server. "
+            "Fix LLAMA_SERVER or unset it. Not compiling over a bad override."
+        )
     found = shutil.which("llama-server")
     if found:
         return found
