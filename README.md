@@ -18,9 +18,9 @@ This repo bundles three pieces that were built and validated together:
 
 - **macOS** with an Apple Silicon GPU (tuned for 48 GB unified memory; edit the constants
   in `scripts/llama_serve.py` for less).
-- **llama.cpp `llama-server`** for **this GPU**: Apple Silicon → Metal (`-DGGML_METAL=ON`);
-  NVIDIA → CUDA (`-DGGML_CUDA=ON`). `make install` and `llama-ai <name>` clone+build that
-  binary if it is missing. Neither GPU → fail (no CPU fallback).
+- **llama.cpp `llama-server`** for **this host**: Apple Silicon → Metal; NVIDIA → CUDA;
+  neither → CPU (`-DGGML_METAL=OFF -DGGML_CUDA=OFF`). `make install` and `llama-ai <name>`
+  clone+build if the binary is missing.
 - **Python 3.10** (Homebrew: `brew install python@3.10`) for the `gguf` tooling venv.
 - Optional `hf` CLI (Hugging Face hub) in a venv — used by `scripts/hf_download.py`.
 
@@ -43,7 +43,7 @@ make install
    venv's python**, so `gguf`/`numpy` resolve with zero extra steps.
 3. **`llama-server` on PATH** — if the binary exists, symlink it. If not,
    `scripts/ensure_llama_server.py` clones `ggml-org/llama.cpp` and compiles
-   **for this GPU** (Metal on Apple Silicon, CUDA on NVIDIA; fail if neither).
+   **for this host** (Metal, CUDA, or CPU if neither GPU).
    `--download-top-tier` never compiles.
 4. **symlink + smoke** — symlinks `~/bin/llama_ai.py` → this repo's launcher (`scripts/llama_serve.py`),
    then runs `~/bin/llama-ai --list`. Succeeds even when `~/models` is empty (you populate it with

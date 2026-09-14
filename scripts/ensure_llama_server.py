@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Clone llama.cpp and build llama-server for THIS GPU (issue #78).
+"""Clone llama.cpp and build llama-server for THIS host (issue #78).
 
 Apple Silicon (darwin + arm64/aarch64) → Metal cmake.
 NVIDIA (`nvidia-smi` lists a GPU) → CUDA cmake (nvcc required).
-Neither → fail closed. Never Metal-on-NVIDIA, never CUDA-on-Mac, never CPU fallback.
+Neither → CPU cmake (Metal off, CUDA off). Never Metal-on-NVIDIA, never CUDA-on-Mac.
 
 If llama-server is already resolvable, do nothing.
 Never called from --download-top-tier.
@@ -19,12 +19,6 @@ LLAMA_CPP_CLONE_URL = "https://github.com/ggml-org/llama.cpp.git"
 LLAMA_CPP_DEFAULT_SRC = os.path.join(
     os.path.expanduser("~"), "repository", "git", "llama.cpp"
 )
-NEITHER_GPU_MSG = (
-    "[ERROR] llama-server build needs Apple Silicon (Metal) or an NVIDIA GPU (CUDA). "
-    "This machine has neither. No CPU fallback."
-)
-
-
 def find_llama_server():
     """Same lookup as llama_serve.resolve_llama_server, without exiting."""
     env = (os.environ.get("LLAMA_SERVER") or "").strip()
@@ -45,7 +39,7 @@ def find_llama_server():
 
 
 def detect_gpu(platform=None, machine=None, nvidia_smi=None):
-    """Return 'metal', 'cuda', or None. Injectables are for tests."""
+    """Return 'metal', 'cuda', or 'cpu'. Injectables are for tests."""
     plat = sys.platform if platform is None else platform
     mach = os.uname().machine if machine is None else machine
     if plat == "darwin" and mach in ("arm64", "aarch64"):
@@ -65,7 +59,7 @@ def detect_gpu(platform=None, machine=None, nvidia_smi=None):
         # nvidia-smi -L typically prints "GPU 0: ..."
         if proc is not None and proc.returncode == 0 and (proc.stdout or "").strip():
             return "cuda"
-    return None
+    return "cpu"
 
 
 def cmake_configure_args(gpu):
@@ -82,7 +76,13 @@ def cmake_configure_args(gpu):
             "-DGGML_CUDA=ON",
             "-DGGML_METAL=OFF",
         ]
-    raise SystemExit(NEITHER_GPU_MSG)
+    if gpu == "cpu":
+        return [
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DGGML_METAL=OFF",
+            "-DGGML_CUDA=OFF",
+        ]
+    raise SystemExit(f"[ERROR] unknown llama.cpp backend {gpu!r}")
 
 
 def _run(cmd, cwd=None):
@@ -104,8 +104,6 @@ def ensure_llama_server(run=None):
         return existing
 
     gpu = detect_gpu()
-    if gpu is None:
-        raise SystemExit(NEITHER_GPU_MSG)
     if gpu == "cuda" and not shutil.which("nvcc"):
         raise SystemExit(
             "[ERROR] NVIDIA GPU detected but nvcc is not on PATH. "

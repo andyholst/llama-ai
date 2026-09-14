@@ -13,7 +13,7 @@ llama-ai only **finds** `llama-server`. The error hint is always Metal. NVIDIA b
 
 - Detect **Apple Silicon** (`darwin` + `arm64`/`aarch64`) → Metal.
 - Detect **NVIDIA** (`nvidia-smi` lists a GPU) → CUDA.
-- Neither → fail closed (no CPU fallback, no Metal-on-NVIDIA, no CUDA-on-Mac).
+- Neither → **CPU** cmake (`-DGGML_METAL=OFF -DGGML_CUDA=OFF`). No Metal-on-NVIDIA, no CUDA-on-Mac.
 - If binary already resolvable → do not clone/cmake.
 - Else clone `https://github.com/ggml-org/llama.cpp.git` to `$HOME/repository/git/llama.cpp` (or `LLAMA_CPP_SRC`).
 - Metal: `cmake -B build -DCMAKE_BUILD_TYPE=Release -DGGML_METAL=ON -DGGML_CUDA=OFF`

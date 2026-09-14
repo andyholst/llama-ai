@@ -23,8 +23,8 @@ def test_detect_cuda_when_nvidia_smi_lists_gpu(tmp_path, monkeypatch):
     assert els.detect_gpu(platform="linux", machine="x86_64", nvidia_smi=str(smi)) == "cuda"
 
 
-def test_detect_neither_on_linux_without_nvidia(monkeypatch):
-    assert els.detect_gpu(platform="linux", machine="x86_64", nvidia_smi=None) is None
+def test_detect_cpu_on_linux_without_nvidia(monkeypatch):
+    assert els.detect_gpu(platform="linux", machine="x86_64", nvidia_smi=None) == "cpu"
 
 
 def test_cmake_args_metal_not_cuda():
@@ -41,11 +41,12 @@ def test_cmake_args_cuda_not_metal():
     assert "-DGGML_METAL=ON" not in args
 
 
-def test_cmake_args_neither_fails():
-    with pytest.raises(SystemExit) as e:
-        els.cmake_configure_args(None)
-    assert "Apple Silicon" in str(e.value)
-    assert "openrouter" not in str(e.value).lower()
+def test_cmake_args_cpu_disables_gpu_backends():
+    args = els.cmake_configure_args("cpu")
+    assert "-DGGML_METAL=OFF" in args
+    assert "-DGGML_CUDA=OFF" in args
+    assert "-DGGML_METAL=ON" not in args
+    assert "-DGGML_CUDA=ON" not in args
 
 
 def test_bad_llama_server_env_does_not_compile(tmp_path, monkeypatch):
@@ -141,14 +142,37 @@ def test_ensure_cuda_cmake_when_missing(tmp_path, monkeypatch):
     assert not any(c[:2] == ["git", "clone"] for c in cmds), "src already present"
 
 
-def test_ensure_neither_gpu_no_cmake(monkeypatch):
+def test_ensure_cpu_cmake_when_no_gpu(tmp_path, monkeypatch):
     monkeypatch.setattr(els, "find_llama_server", lambda: None)
-    monkeypatch.setattr(els, "detect_gpu", lambda **k: None)
-    with pytest.raises(SystemExit) as e:
-        els.ensure_llama_server(run=lambda *a, **k: (_ for _ in ()).throw(AssertionError("cmake")))
-    assert "Apple Silicon" in str(e.value)
-    assert "openrouter" not in str(e.value).lower()
-    assert "openai" not in str(e.value).lower()
+    monkeypatch.setattr(els, "detect_gpu", lambda **k: "cpu")
+    src = tmp_path / "llama.cpp"
+    src.mkdir()
+    (src / "ggml").mkdir()
+    monkeypatch.setenv("LLAMA_CPP_SRC", str(src))
+    home = tmp_path / "home"
+    (home / "bin").mkdir(parents=True)
+    monkeypatch.setenv("HOME", str(home))
+
+    def exp(p):
+        return str(home) if p == "~" else p
+
+    monkeypatch.setattr(els.os.path, "expanduser", exp)
+    cmds = []
+
+    def run(cmd, cwd=None):
+        cmds.append(list(cmd))
+        if cmd[0] == "cmake" and "-B" in cmd:
+            (src / "build" / "bin").mkdir(parents=True)
+            binp = src / "build" / "bin" / "llama-server"
+            binp.write_bytes(b"cpu")
+            binp.chmod(0o755)
+
+    els.ensure_llama_server(run=run)
+    cmake = [c for c in cmds if c[0] == "cmake" and "-B" in c][0]
+    assert "-DGGML_METAL=OFF" in cmake
+    assert "-DGGML_CUDA=OFF" in cmake
+    assert "-DGGML_CUDA=ON" not in cmake
+    assert "-DGGML_METAL=ON" not in cmake
 
 
 def test_ensure_cuda_without_nvcc_fails(monkeypatch):

@@ -7,7 +7,7 @@ WHEN ensuring `llama-server` and no binary is already resolvable
 THEN the host is classified as:
 - **metal** if `sys.platform == "darwin"` and `os.uname().machine` is `arm64` or `aarch64`
 - **cuda** if `nvidia-smi` runs successfully and lists a GPU
-- otherwise **fail closed** with a message that Apple Silicon (Metal) or NVIDIA (CUDA) is required — no CPU cmake, no opposite GPU
+- otherwise **cpu** — cmake with Metal off and CUDA off (no opposite GPU)
 
 #### Scenario: Darwin arm64 is Metal
 GIVEN platform darwin and machine arm64
@@ -19,10 +19,10 @@ GIVEN nvidia-smi exits 0 with a GPU name
 WHEN detect runs
 THEN gpu is `cuda`
 
-#### Scenario: neither GPU fails
+#### Scenario: neither GPU builds CPU
 GIVEN linux without nvidia-smi
 WHEN ensure runs and no binary exists
-THEN non-zero exit and cmake is not invoked
+THEN cmake contains `-DGGML_METAL=OFF` and `-DGGML_CUDA=OFF`
 
 ### Requirement: Clone llama.cpp then cmake for that GPU
 WHEN the binary is missing and a GPU class is known
@@ -30,7 +30,8 @@ THEN source is `git clone --depth 1 https://github.com/ggml-org/llama.cpp.git` i
 `$HOME/repository/git/llama.cpp` (or `LLAMA_CPP_SRC`) if the directory is missing.
 THEN cmake is **exactly**:
 - metal: `-DCMAKE_BUILD_TYPE=Release -DGGML_METAL=ON -DGGML_CUDA=OFF`
-- cuda: `-DCMAKE_BUILD_TYPE=Release -DGGML_CUDA=ON -DGGML_METAL=OFF` and `nvcc` must exist or fail closed
+- cuda: `-DCMAKE_BUILD_TYPE=Release -DGGML_CUDA=ON -DGGML_METAL=OFF` and `nvcc` must exist or fail closed (NVIDIA present, toolkit missing — not a CPU machine)
+- cpu: `-DCMAKE_BUILD_TYPE=Release -DGGML_METAL=OFF -DGGML_CUDA=OFF`
 THEN `cmake --build build --config Release --target llama-server` and symlink `~/bin/llama-server`.
 WHEN a resolvable `llama-server` already exists
 THEN clone and cmake MUST NOT run.

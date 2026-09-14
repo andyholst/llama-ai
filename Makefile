@@ -67,7 +67,7 @@ link:
 		ln -sfn "$(LLAMA_SERVER_BIN)" "$(BIN)/llama-server"; \
 		echo "==> Symlinked ~/bin/llama-server -> $(LLAMA_SERVER_BIN)"; \
 	else \
-		echo "==> llama-server missing at $(LLAMA_SERVER_BIN); building for this GPU (Metal or CUDA)."; \
+		echo "==> llama-server missing at $(LLAMA_SERVER_BIN); building for this host (Metal, CUDA, or CPU)."; \
 		$(PY) "$(REPO)/scripts/ensure_llama_server.py"; \
 	fi
 	@echo "==> Wrote $(LAUNCHER) (exec) and symlinked ~/bin/llama_ai.py -> repo"
