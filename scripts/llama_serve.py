@@ -62,6 +62,11 @@ except ImportError:
 from gguf import GGUFReader
 import numpy as np
 
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if _SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPT_DIR)
+from ensure_llama_server import ensure_llama_server  # noqa: E402
+
 HOME = os.path.expanduser("~")
 # MODELS_ROOT overridable for hermetic tests (and for custom model dirs).
 # Falls back to ~/models so local host behaviour is unchanged.
@@ -1084,7 +1089,7 @@ def _serve_chosen(chosen, args):
         kv_budget = 512 * 1024 * 1024
     ctx = tuned_context(chosen, kv_budget)
     global LLAMA_SERVER
-    LLAMA_SERVER = resolve_llama_server()
+    LLAMA_SERVER = ensure_llama_server()
     cmd = build_command(chosen, ctx, args.port)
 
     print(f"\nModel : {chosen['name']} ({chosen['arch']})")
@@ -1200,7 +1205,7 @@ def main():
     # resolve llama-server (LLAMA_SERVER override, then PATH) BEFORE building the
     # command — terminates with a clear error if the binary is missing.
     global LLAMA_SERVER
-    LLAMA_SERVER = resolve_llama_server()
+    LLAMA_SERVER = ensure_llama_server()
     cmd = build_command(chosen, ctx, args.port)
 
     print(f"\nModel : {chosen['name']} ({chosen['arch']})")

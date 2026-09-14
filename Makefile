@@ -67,9 +67,8 @@ link:
 		ln -sfn "$(LLAMA_SERVER_BIN)" "$(BIN)/llama-server"; \
 		echo "==> Symlinked ~/bin/llama-server -> $(LLAMA_SERVER_BIN)"; \
 	else \
-		echo "WARN: llama-server binary not found at $(LLAMA_SERVER_BIN)." >&2; \
-		echo "      llama_ai.py will terminate until 'llama-server' is on PATH." >&2; \
-		echo "      Set LLAMA_SERVER_BIN=<path> or add llama-server to PATH." >&2; \
+		echo "==> llama-server missing at $(LLAMA_SERVER_BIN); building for this GPU (Metal or CUDA)."; \
+		$(PY) "$(REPO)/scripts/ensure_llama_server.py"; \
 	fi
 	@echo "==> Wrote $(LAUNCHER) (exec) and symlinked ~/bin/llama_ai.py -> repo"
 
@@ -162,7 +161,7 @@ test-clean: ## Remove left-over/stopped orphaned containers of the test image (i
 	echo "Pruned stopped orphaned $(TEST_IMG) containers."
 
 test-unit: ## Hermetic unit tests (containerized) — includes the lint regression + openspec-tasks-check tests
-	$(TEST_RUN) python -m pytest tests/test_llama_ai.py tests/test_hf_download_stall.py tests/test_lint_linefeeds.py tests/test_watchloop_dispatch.py tests/test_check_openspec_tasks.py tests/test_install_watchloop_cron.py tests/test_watch_report.py -p no:cacheprovider -q
+	$(TEST_RUN) python -m pytest tests/test_llama_ai.py tests/test_ensure_llama_server.py tests/test_hf_download_stall.py tests/test_lint_linefeeds.py tests/test_watchloop_dispatch.py tests/test_check_openspec_tasks.py tests/test_install_watchloop_cron.py tests/test_watch_report.py -p no:cacheprovider -q
 
 test-agents-e2e: ## REAL end-to-end agent tests (containerized) — runs ONLY *_e2e*.py files directly
 	# issue #63 CI gate: exercises the REAL dispatcher spawn/kill/respawn against a fake

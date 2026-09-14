@@ -18,9 +18,9 @@ This repo bundles three pieces that were built and validated together:
 
 - **macOS** with an Apple Silicon GPU (tuned for 48 GB unified memory; edit the constants
   in `scripts/llama_serve.py` for less).
-- **llama.cpp** built with Metal support, producing `build/bin/llama-server`. The launcher
-  finds it as **`llama-server` on your PATH** (see *Install* — `make install` symlinks it
-  into `~/bin`). It terminates with a clear error if the binary is missing.
+- **llama.cpp `llama-server`** for **this GPU**: Apple Silicon → Metal (`-DGGML_METAL=ON`);
+  NVIDIA → CUDA (`-DGGML_CUDA=ON`). `make install` and `llama-ai <name>` clone+build that
+  binary if it is missing. Neither GPU → fail (no CPU fallback).
 - **Python 3.10** (Homebrew: `brew install python@3.10`) for the `gguf` tooling venv.
 - Optional `hf` CLI (Hugging Face hub) in a venv — used by `scripts/hf_download.py`.
 
@@ -41,10 +41,10 @@ make install
    `--download-top-tier` is always available, no separate install needed).
 2. **launcher** — writes an executable `~/bin/llama-ai` that runs `scripts/llama_serve.py` **with the
    venv's python**, so `gguf`/`numpy` resolve with zero extra steps.
-3. **`llama-server` on PATH** — symlinks `~/bin/llama-server` → your llama.cpp
-   `build/bin/llama-server` (override the build path with `LLAMA_SERVER_BIN=<path>`).
-   `scripts/llama_serve.py` resolves the server as **`llama-server` on PATH** and **terminates with a
-   clear error if it isn't found**.
+3. **`llama-server` on PATH** — if the binary exists, symlink it. If not,
+   `scripts/ensure_llama_server.py` clones `ggml-org/llama.cpp` and compiles
+   **for this GPU** (Metal on Apple Silicon, CUDA on NVIDIA; fail if neither).
+   `--download-top-tier` never compiles.
 4. **symlink + smoke** — symlinks `~/bin/llama_ai.py` → this repo's launcher (`scripts/llama_serve.py`),
    then runs `~/bin/llama-ai --list`. Succeeds even when `~/models` is empty (you populate it with
    `llama-ai --download-top-tier`), failing only on a genuine gguf/launch error.
