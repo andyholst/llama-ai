@@ -62,6 +62,11 @@ except ImportError:
 from gguf import GGUFReader
 import numpy as np
 
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if _SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPT_DIR)
+from ensure_llama_server import ensure_llama_server  # noqa: E402
+
 HOME = os.path.expanduser("~")
 # MODELS_ROOT overridable for hermetic tests (and for custom model dirs).
 # Falls back to ~/models so local host behaviour is unchanged.
@@ -88,6 +93,12 @@ TOP_TIER_FAMILIES = (
     "k2-", "mova",     # IFM/K2-Horizon-MoVA-36B-A4B-GGUF (trend ~74)
 )
 MIN_TOP_TIER_GB = 4.0          # below this the quant file is treated as a toy/small
+# Agent GGUFs: word-boundary tokens on repo id or filename (issue #76/#77).
+# Fit gate still runs first; these only decide "CLI-agent brain" vs base/chat leftover.
+AGENT_FILENAME_TOKENS = ("instruct", "coder", "tool")
+AGENT_TOKEN_RE = re.compile(
+    r"(?i)(?<![a-z0-9])(" + "|".join(AGENT_FILENAME_TOKENS) + r")(?![a-z0-9])"
+)
 # Growing tier ladder for the `TierGB` placement folder. Extends DOWN to 1/2/4 GB so
 # tiny CPU cards and small models get truthful folders too, and UP past 48 GB so big
 # cards (256/512 GB+) get truthful tiers instead of everything-capped-at-48GB.
@@ -419,6 +430,15 @@ def read_current_headroom_bytes(total_bytes=None):
 # ---------------------------------------------------------------------------
 # llama-server resolution
 # ---------------------------------------------------------------------------
+def is_agent_gguf(repo, filename):
+    """True if repo id or filename is an instruct/coder/tool (agent) GGUF.
+
+    Word-boundary match so 'instructional' is not enough; 'Instruct' / 'coder' / 'tool' are.
+    """
+    hay = f"{repo or ''} {os.path.basename(filename or '')}"
+    return bool(AGENT_TOKEN_RE.search(hay))
+
+
 def resolve_llama_server():
     """Locate the llama-server binary.
 
@@ -678,7 +698,8 @@ def discover_top_tier(limit=10, total_ram_bytes=None, headroom_bytes=None,
                       family=None, family_repos=None):
     """Ranked top-tier GGUF candidates that FIT the card, with real file sizes.
 
-    Combines the three signals (trending + top-tier family + fit gate) using the
+    Combines trending + top-tier family + fit gate + **agent** filter (instruct/coder/tool)
+    using the
     dynamic total/headroom read from the card. For each trending provider (owner)
     it offers `per_provider` candidates at DIFFERENT quant sizes: the best
     (highest-fidelity that still fits comfortably) plus a lighter quant — so you
@@ -726,6 +747,8 @@ def discover_top_tier(limit=10, total_ram_bytes=None, headroom_bytes=None,
              # "no lower models": skip low-fidelity IQ1/IQ2/IQ3 quants even when a
              # trending provider only offers those (a 27B at ~8-11 GB is poor quality).
              and not re.search(r"(?:-|_)(IQ[123]_|IQ[12]XS|IQ[123][0-9])", os.path.basename(f["path"]), re.I)
+             # agent brain only (issue #76/#77): instruct/coder/tool; do not pad with base.
+             and is_agent_gguf(repo, os.path.basename(f["path"]))
              ],
             key=lambda f: f["size_gb"], reverse=True,
         )
@@ -955,8 +978,9 @@ def _main_download_top_tier(args):
     default  -> download the top `--count` candidates that fit, then serve the
                 highest-ranked one (unless --list). Honors --port/--dry.
     """
+    # `--count` = number of AGENT FILES that fit (issue #76/#77), not providers.
     limit = max(1, args.count)
-    per_provider = max(1, args.per_provider or 2)   # high + lower quant per provider
+    per_provider = max(1, args.per_provider or 2)   # high + lower among agent quants only
     family = getattr(args, "family", None)
     print(f"[top-tier] detecting memory on the actual card ...")
     total = read_total_ram_bytes()
@@ -983,9 +1007,9 @@ def _main_download_top_tier(args):
             print(f"[top-tier] no GGUF repos found for family '{family}'. "
                   "Nothing downloaded.", file=sys.stderr)
             sys.exit(1)
-    # `--count` = number of PROVIDERS; each yields per_provider quants (high+lower).
+    # `--count` = number of agent FILES (not providers × per_provider).
     skip_summary = []  # (repo, reason) for gated/dead repos dropped pre-flight
-    cands = discover_top_tier(limit=max(1, limit * per_provider),
+    cands = discover_top_tier(limit=limit,
                               total_ram_bytes=total, headroom_bytes=head,
                               min_trending_score=args.min_trending_score,
                               per_provider=per_provider, skip_summary=skip_summary,
@@ -993,17 +1017,18 @@ def _main_download_top_tier(args):
                               family_repos=(family_repos if family else None))
     if not cands:
         if family:
-            print(f"[top-tier] no model from family '{family}' fits the available card "
+            print(f"[top-tier] no agent model from family '{family}' fits the available card "
                   "right now. Nothing downloaded.")
         else:
-            print("[top-tier] no trending top-tier GGUF model fits the available card right now. "
+            print("[top-tier] no trending top-tier agent GGUF fits the available card right now. "
                   "Nothing downloaded.")
         return
     if family:
-        total_str = (f"top {limit} providers of family '{family}' "
+        total_str = (f"top {limit} agent models of family '{family}' "
                      f"that fit {total/(1024**3):.0f} GB:")
     else:
-        total_str = f"top {limit} trending top-tier models that fit {total/(1024**3):.0f} GB:"
+        total_str = (f"top {limit} trending top-tier agent models that fit "
+                     f"{total/(1024**3):.0f} GB:")
     if args.list:
         print(f"\n{total_str}\n")
         for i, c in enumerate(cands, 1):
@@ -1013,7 +1038,8 @@ def _main_download_top_tier(args):
         return
     # --dry: print what would be downloaded, do NOT download or serve.
     if args.dry:
-        print(f"\n[dry] would download top {len(cands)} top-tier provider(s):\n")
+        print(f"\n[dry] would download top {len(cands)} top-tier agent file(s) "
+              f"(wanted {limit}):\n")
         for i, c in enumerate(cands, 1):
             print(f"{i:2d}. [{c['trendingScore']:>4} trend] {c['size_gb']:7.2f} GB  "
                   f"{c['repo']}::{c['filename']}  -> {c['dest_path']}")
@@ -1047,7 +1073,8 @@ def _main_download_top_tier(args):
     if not completed:
         print("[top-tier] nothing could be downloaded.")
         sys.exit(1)
-    print(f"\n[top-tier] completed {len(completed)}/{len(cands)} provider(s).")
+    print(f"\n[top-tier] completed {len(completed)}/{limit} agent model(s) "
+          f"({len(cands)} candidates).")
     skip_line = _skip_summary_line(skip_summary)
     if skip_line:
         print(f"[top-tier]   (+{skip_line}).")
@@ -1084,7 +1111,7 @@ def _serve_chosen(chosen, args):
         kv_budget = 512 * 1024 * 1024
     ctx = tuned_context(chosen, kv_budget)
     global LLAMA_SERVER
-    LLAMA_SERVER = resolve_llama_server()
+    LLAMA_SERVER = ensure_llama_server()
     cmd = build_command(chosen, ctx, args.port)
 
     print(f"\nModel : {chosen['name']} ({chosen['arch']})")
@@ -1128,8 +1155,8 @@ def main():
                          "that fit the actual GPU/CPU card. DOWNLOAD ONLY — never auto-starts "
                          "llama-server; serve a downloaded model separately with `llama-ai <name>`.")
     ap.add_argument("--count", type=int, default=5,
-                    help="with --download-top-tier: number of distinct PROVIDERS to download "
-                         "(each yields high + lower quants, default 5 = variety of what's popular)")
+                    help="with --download-top-tier: number of agent GGUF FILES that fit "
+                         "(default 5). Instruct/coder/tool only; not 5 Hugging Face owners.")
     ap.add_argument("--per-provider", type=int, default=2,
                     help="with --download-top-tier: quants per provider (default 2 = best + a "
                          "lower Q4/Q5/Q6 so each fits comfortably, not just Q8)")
@@ -1197,10 +1224,10 @@ def main():
     if kv_budget < 0:
         kv_budget = 512 * 1024 * 1024
     ctx = tuned_context(chosen, kv_budget)
-    # resolve llama-server (LLAMA_SERVER override, then PATH) BEFORE building the
-    # command — terminates with a clear error if the binary is missing.
+    # resolve or compile llama-server for THIS GPU (issue #78) BEFORE building
+    # the command. --download-top-tier never reaches here.
     global LLAMA_SERVER
-    LLAMA_SERVER = resolve_llama_server()
+    LLAMA_SERVER = ensure_llama_server()
     cmd = build_command(chosen, ctx, args.port)
 
     print(f"\nModel : {chosen['name']} ({chosen['arch']})")
