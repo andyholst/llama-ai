@@ -120,10 +120,22 @@ def ensure_llama_server(run=None):
         os.makedirs(parent, exist_ok=True)
         runner(["git", "clone", "--depth", "1", LLAMA_CPP_CLONE_URL, src], cwd=None)
 
+    print(f"==> building llama-server backend={gpu}", flush=True)
     cmake_cmd = ["cmake", "-B", "build"] + cmake_configure_args(gpu)
     runner(cmake_cmd, cwd=src)
+    jobs = str(os.cpu_count() or 1)
     runner(
-        ["cmake", "--build", "build", "--config", "Release", "--target", "llama-server"],
+        [
+            "cmake",
+            "--build",
+            "build",
+            "--config",
+            "Release",
+            "--target",
+            "llama-server",
+            "-j",
+            jobs,
+        ],
         cwd=src,
     )
     built = os.path.join(src, "build", "bin", "llama-server")

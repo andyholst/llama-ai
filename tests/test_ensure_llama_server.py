@@ -27,6 +27,10 @@ def test_detect_cpu_on_linux_without_nvidia(monkeypatch):
     assert els.detect_gpu(platform="linux", machine="x86_64", nvidia_smi=None) == "cpu"
 
 
+def test_detect_cpu_on_intel_mac(monkeypatch):
+    assert els.detect_gpu(platform="darwin", machine="x86_64", nvidia_smi=None) == "cpu"
+
+
 def test_cmake_args_metal_not_cuda():
     args = els.cmake_configure_args("metal")
     assert "-DGGML_METAL=ON" in args
