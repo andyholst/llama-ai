@@ -2,7 +2,7 @@
 
 ## ADDED Requirements
 
-### Requirement: Detect Apple Silicon vs NVIDIA, fail if neither
+### Requirement: Detect Apple Silicon vs NVIDIA vs CPU
 WHEN ensuring `llama-server` and no binary is already resolvable
 THEN the host is classified as:
 - **metal** if `sys.platform == "darwin"` and `os.uname().machine` is `arm64` or `aarch64`
