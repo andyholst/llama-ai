@@ -180,6 +180,12 @@ class TestDispatchE2EStuckReclaim:
             "respawned worker must have completed the README issue-work"
 
         # And the original hung worker's tree is gone (was killed)
+        # Allow the kernel a brief moment to clean up SIGKILLed processes
+        # before the pid_alive check.
+        for _ in range(10):
+            if not wd.pid_alive(first_pid):
+                break
+            time.sleep(0.05)
         assert not wd.pid_alive(first_pid), "original hung worker must be dead"
         # The lock now points at the fresh worker (or the fresh worker already exited cleanly)
         new_pid = int(open(lk).read().strip())
