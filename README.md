@@ -1,4 +1,4 @@
-# llama-ai
+# llgenie
 
 Tooling to serve GGUF models locally via **llama.cpp's `llama-server`** (Metal / 48 GB
 unified-memory M-series Mac), plus a resilient Hugging Face downloader and the Python
@@ -29,8 +29,8 @@ This repo bundles three pieces that were built and validated together:
 ## Install (recommended) — one command, no manual venv work
 
 ```bash
-git clone <this-repo> ~/repository/git/llama-ai
-cd ~/repository/git/llama-ai
+git clone <this-repo> ~/repository/git/llgenie
+cd ~/repository/git/llgenie
 make install
 ```
 
@@ -39,31 +39,31 @@ make install
 1. **venv** — builds the Python 3.10 gguf-tooling venv at `~/llama-gguf-tools/.venv`
    (`numpy` + `gguf==0.19.0` + `huggingface_hub[cli]` so the `hf` downloader used by
    `--download-top-tier` is always available, no separate install needed).
-2. **launcher** — writes an executable `~/bin/llama-ai` that runs `scripts/llama_serve.py` **with the
+2. **launcher** — writes an executable `~/bin/llgenie` that runs `scripts/llama_serve.py` **with the
    venv's python**, so `gguf`/`numpy` resolve with zero extra steps.
 3. **`llama-server` on PATH** — symlinks `~/bin/llama-server` → your llama.cpp
    `build/bin/llama-server` (override the build path with `LLAMA_SERVER_BIN=<path>`).
    `scripts/llama_serve.py` resolves the server as **`llama-server` on PATH** and **terminates with a
    clear error if it isn't found**.
-4. **symlink + smoke** — symlinks `~/bin/llama_ai.py` → this repo's launcher (`scripts/llama_serve.py`),
-   then runs `~/bin/llama-ai --list`. Succeeds even when `~/models` is empty (you populate it with
-   `llama-ai --download-top-tier`), failing only on a genuine gguf/launch error.
+4. **symlink + smoke** — symlinks `~/bin/llgenie.py` → this repo's launcher (`scripts/llama_serve.py`),
+   then runs `~/bin/llgenie --list`. Succeeds even when `~/models` is empty (you populate it with
+   `llgenie --download-top-tier`), failing only on a genuine gguf/launch error.
 
 After `make install`, just run:
 
 ```bash
-llama-ai                 # interactive model picker
-llama-ai --list          # list models
-llama-ai qwen            # launch by model-name substring
-llama-ai --dry qwen      # print the tuned command without running
+llgenie                 # interactive model picker
+llgenie --list          # list models
+llgenie qwen            # launch by model-name substring
+llgenie --dry qwen      # print the tuned command without running
 ```
 
 Other targets: `make venv-install`, `make link`, `make smoke`, `make list`,
 `make version`, `make uninstall` (removes the launcher + symlink, keeps the venv), `make help`.
 
 > **Why a wrapper?** `scripts/llama_serve.py` imports the `gguf`/`numpy` packages that live in the
-> venv, so it must be launched with the venv python. The `~/bin/llama-ai` wrapper does
-> exactly that; the `llama_ai.py` symlink keeps editors/`--list` pointing at the real file (which lives at
+> venv, so it must be launched with the venv python. The `~/bin/llgenie` wrapper does
+> exactly that; the `llgenie.py` symlink keeps editors/`--list` pointing at the real file (which lives at
 > `scripts/llama_serve.py`).
 
 ### Manual setup (only if you don't want `make install`)
@@ -141,23 +141,23 @@ have** — with KV-cache headroom so they *run*, not just download.
 
 ```bash
 # list the top-tier trending models that fit the actual card (no download)
-llama-ai --download-top-tier --list
+llgenie --download-top-tier --list
 # download 5 distinct providers x 2 quants (default): each provider's HIGH (Q8) + lower (Q6/Q5)
-llama-ai --download-top-tier
+llgenie --download-top-tier
 # download N providers' high + lower quants (--count) 
-llama-ai --download-top-tier --count 3
+llgenie --download-top-tier --count 3
 # just the best (high) quant per provider, no lower
-llama-ai --download-top-tier --per-provider 1
+llgenie --download-top-tier --per-provider 1
 # only consider models rated high enough (trendingScore floor)
-llama-ai --download-top-tier --min-trending-score 150
+llgenie --download-top-tier --min-trending-score 150
 # see what it would download without downloading
-llama-ai --download-top-tier --dry
+llgenie --download-top-tier --dry
 ```
 
 By default it aims for **5 distinct providers × 2 quants each** — the HIGH (Q8) plus a clearly-LOWER
 (Q4/Q5/Q6) quant per provider — **ranked by trending** (most popular now first, not by file size),
 and it **only downloads — it never auto-starts llama-server** (serve a downloaded model separately
-with `llama-ai <name>`). A failing provider is retried (up to 3×) without aborting the batch, and
+with `llgenie <name>`). A failing provider is retried (up to 3×) without aborting the batch, and
 already-downloaded models are never re-fetched on a re-run (idempotent via HF content-hash). Live
 download progress shows a **0-100%** readout of the current file, and it uses HF's high-performance
 `hf-xet` transfer (fast for large files).
@@ -225,11 +225,11 @@ queries the **complete** family for the keyword rather than the trending slice.
 
 ```bash
 # top 5 providers of the qwen family, each with high + lower quants
-llama-ai --download-top-tier --family qwen
+llgenie --download-top-tier --family qwen
 # top 1 provider of the ornith family, just the high quant
-llama-ai --download-top-tier --family ornith --count 1 --per-provider 1
+llgenie --download-top-tier --family ornith --count 1 --per-provider 1
 # preview a known low-end family, 1 provider, without downloading (small card)
-LLAMA_RAM_BYTES=$((8*1024**3)) llama-ai --download-top-tier --family qwen --count 1 --dry
+LLAMA_RAM_BYTES=$((8*1024**3)) llgenie --download-top-tier --family qwen --count 1 --dry
 ```
 
 Everything else (`--count`, `--per-provider`, `--dry`, placement, probe+refill,
@@ -279,11 +279,11 @@ make test-agents-e2e   # REAL agent-spawn e2e: runs ONLY *_e2e*.py — fake work
                        # issue-work, hung worker is killed+respawned (issue #63); <1 min
 make test-install      # install tests (run in-container; host-artifact asserts — no skips via test-install-ci)
 make test-install-ci   # REAL install tests, NO SKIPS: make install + model + assert in ONE container
-make test-install-host # verify the REAL host install: ~/bin/llama-ai + symlinks + ~/models (runs on host)
+make test-install-host # verify the REAL host install: ~/bin/llgenie + symlinks + ~/models (runs on host)
 make test-health       # end-to-end CPU LLM check: downloads tiny model, answers "hi"
 make test-top-tier     # REAL acceptance (no mocks): live HF trending + fit gate + real download
 make test-top-tier-serve  # download a lightweight top-tier model, load llama-server, answer 'hi', check RAM
-make test-top-tier-cli-ci # REAL CLI dry-run in the CI container: llama-ai --download-top-tier --dry --count 2
+make test-top-tier-cli-ci # REAL CLI dry-run in the CI container: llgenie --download-top-tier --dry --count 2
 make download-test-model  # fetch Qwen2.5-0.5B into ~/models/Qwen/8GB (via `hf` CLI)
 make openspec-validate NAME=<change>   # validate an OpenSpec change
 make test-clean        # prune stopped orphaned test containers (always)
@@ -316,7 +316,7 @@ on CI and locally. In particular the model download always uses the official
 
 CI exercises only the **CPU** path (bare runners, no GPU). Before reporting a
 change that touches the launcher/health/serving as done, you must also run the
-health check against the **host GPU (Metal)** via `~/bin/llama-ai` with the
+health check against the **host GPU (Metal)** via `~/bin/llgenie` with the
 `Qwen/8GB` model and record the reply.
 
 ### Self-driving development (background watch loop)
@@ -333,7 +333,7 @@ durable rulebook) that, each tick:
   `delete_branch: true`, so no stale `origin` branches accumulate after a merge).
 - **Drives every open issue to a PR**: for any open issue lacking a live branch/
   PR it creates an isolated git worktree feature branch off `main`
-  (`../llama-ai-wt/<kebab>`), follows the OpenSpec-first lifecycle
+  (`../llgenie-wt/<kebab>`), follows the OpenSpec-first lifecycle
   (change/proposal/spec/tasks first, then implementation), validates, then opens
   a PR against `main` that references the issue.
 - **Keeps the issue body, OpenSpec change, and code in sync** (bidirectional,
@@ -353,7 +353,7 @@ The durable rules and the exact crontab entry live in `AGENTS.md` (the
 review past loop runs with `grep 'WATCH-LOOP SUMMARY' .watchloop/watchloop.log`.
 
 This contract is exercised end-to-end by verification issue
-[#7](https://github.com/asimov-agent/llama-ai/issues/7), which the loop drove to a
+[#7](https://github.com/asimov-agent/llgenie/issues/7), which the loop drove to a
 real worktree → OpenSpec → code → PR lifecycle on the branch
 `feat/test-watchloop-verify-the-background-watch-loop-dr` — proof the loop is not
 just documented but actually drives a brand-new issue to a PR.
@@ -473,7 +473,7 @@ It answers three questions:
 ## Layout
 
 ```
-llama-ai/
+llgenie/
 ├── tools/             # gguf-tooling venv + pip-compile container
 │   ├── Makefile
 │   ├── requirements.in      # source of truth (numpy, gguf==0.19.0)

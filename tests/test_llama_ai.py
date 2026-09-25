@@ -14,7 +14,7 @@ import urllib.error
 
 import pytest
 
-import scripts.llama_serve as llama_ai  # noqa: E402  (relocated from root llama_ai.py; importable: gguf+numpy come from the venv)
+import scripts.llama_serve as llama_ai  # noqa: E402  (relocated from root llgenie.py; importable: gguf+numpy come from the venv)
 
 
 def _minimal_gguf(tmp_path: Path, filename: str = "mini.gguf") -> Path:

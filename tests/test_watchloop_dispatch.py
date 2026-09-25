@@ -376,7 +376,7 @@ class TestEnsureWorktreeSync:
         calls = []
 
         # Existing worktree dir present at the EXACT path ensure_worktree computes.
-        wt = (tmp_path / ".." / "llama-ai-wt" / "always-sync").resolve()
+        wt = (tmp_path / ".." / "llgenie-wt" / "always-sync").resolve()
         wt.mkdir(parents=True, exist_ok=True)
         real_isdir = os.path.isdir
         monkeypatch.setattr(os.path, "isdir", lambda p: real_isdir(p) or str(p) == str(wt))
@@ -405,7 +405,7 @@ class TestEnsureWorktreeSync:
         monkeypatch.setattr(wd, "REPO", str(tmp_path))
         calls = []
         # Existing worktree dir present at the EXACT path ensure_worktree computes.
-        wt = (tmp_path / ".." / "llama-ai-wt" / "fresh").resolve()
+        wt = (tmp_path / ".." / "llgenie-wt" / "fresh").resolve()
         wt.mkdir(parents=True, exist_ok=True)
         real_isdir = os.path.isdir
         monkeypatch.setattr(os.path, "isdir", lambda p: real_isdir(p) or str(p) == str(wt))
@@ -491,14 +491,14 @@ class TestEnsureWorktreeReuse:
         real_isdir = os.path.isdir
         monkeypatch.setattr(
             os.path, "isdir",
-            lambda p: real_isdir(p) if real_isdir(p) and "llama-ai-wt" not in p else False,
+            lambda p: real_isdir(p) if real_isdir(p) and "llgenie-wt" not in p else False,
         )
         return tmp_path
 
     def test_existing_worktree_issues_no_add(self, tmp_path, monkeypatch):
         """(1) worktree already exists -> NO `git worktree add`; rebase-if-behind."""
         monkeypatch.setattr(wd, "REPO", str(tmp_path))
-        wt = (tmp_path / ".." / "llama-ai-wt" / "issue46-existing").resolve()
+        wt = (tmp_path / ".." / "llgenie-wt" / "issue46-existing").resolve()
         wt.mkdir(parents=True, exist_ok=True)
         real_isdir = os.path.isdir
         monkeypatch.setattr(os.path, "isdir",
@@ -526,7 +526,7 @@ class TestEnsureWorktreeReuse:
         assert len(adds) == 1, f"exactly one worktree add expected: {adds}"
         cmd = adds[0]
         assert "-b" not in cmd, f"attach must NOT pass -b (rc 255 regression): {cmd}"
-        assert cmd[cmd.index("add") + 1] == f"{tmp_path}/../llama-ai-wt/issue46-attach"
+        assert cmd[cmd.index("add") + 1] == f"{tmp_path}/../llgenie-wt/issue46-attach"
         assert "feat/issue46-attach" in cmd
 
     def test_local_branch_no_worktree_attaches_without_b(self, tmp_path, monkeypatch):
@@ -584,7 +584,7 @@ class TestRepairSpawnReusesBranch:
         real_isdir = os.path.isdir
         monkeypatch.setattr(
             os.path, "isdir",
-            lambda p: real_isdir(p) if real_isdir(p) and "llama-ai-wt" not in p else False,
+            lambda p: real_isdir(p) if real_isdir(p) and "llgenie-wt" not in p else False,
         )
         monkeypatch.setattr(wd, "pr_is_behind", lambda pr: False)
         monkeypatch.setattr(wd, "WORKER_PROVIDER", "openrouter")
@@ -607,7 +607,7 @@ class TestRepairSpawnReusesBranch:
         assert (tmp_path / "worker-feat_stuck-pr-repair-stage.running").exists()
         # The launch command targets the PR's existing worktree path.
         cmd = spawned[0][2]
-        assert "llama-ai-wt/stuck-pr-repair-stage" in cmd, cmd
+        assert "llgenie-wt/stuck-pr-repair-stage" in cmd, cmd
         # ...and it reads the PR commentary (REPAIR prompt).
         prompt_file = tmp_path / "worker-feat_stuck-pr-repair-stage.prompt"
         assert prompt_file.exists()

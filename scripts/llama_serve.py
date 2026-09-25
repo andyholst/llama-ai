@@ -36,10 +36,10 @@ import urllib.parse
 # ---------------------------------------------------------------------------
 # Interpreter bootstrap: the `gguf`/`numpy` deps live in the 3.10 venv built by
 # `make install` (~/llama-gguf-tools/.venv). This file is symlinked into ~/bin
-# as `llama_ai.py` and its shebang (#!/usr/bin/env python3) often resolves to the
+# as `llgenie.py` and its shebang (#!/usr/bin/env python3) often resolves to the
 # SYSTEM python, which lacks gguf -> "No module named 'gguf'". If the imports
 # below are missing in the current interpreter, re-exec this same file with the
-# venv python so it works however it is launched (directly or via `llama-ai`).
+# venv python so it works however it is launched (directly or via `llgenie`).
 # ---------------------------------------------------------------------------
 try:
     import gguf  # noqa: F401
@@ -55,7 +55,7 @@ except ImportError:
         "found.\n"
         "        Install it first:  cd ~/repository/git/llama-ai && make install\n"
         "        Then run:          ~/llama-gguf-tools/.venv/bin/python ~/scripts/llama_serve.py\n"
-        "        (or use the 'llama-ai' launcher on your PATH)",
+        "        (or use the 'llgenie' launcher on your PATH)",
         file=sys.stderr,
     )
     raise SystemExit(1)
@@ -94,7 +94,7 @@ MIN_TOP_TIER_GB = 4.0          # below this the quant file is treated as a toy/s
 # Availability is bounded by the detected/overridden card in pick_tier_folder().
 TIER_LADDER_GB = (1, 2, 4, 8, 16, 24, 48, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048, 3072)
 HF_API = "https://huggingface.co/api/models"
-HF_UA = "llama-ai/1.0 (top-tier-download)"
+HF_UA = "llgenie/1.0 (top-tier-download)"
 # Transient HF API failures that _hf_get retries with backoff. 429 = rate-limited,
 # 500/502/503/504 = server-side blips, and a plain URLError (DNS/reset/timeout) is
 # also transient. Permanent errors (401/403/404, etc.) are NOT retried — they fail
@@ -1052,7 +1052,7 @@ def _main_download_top_tier(args):
     if skip_line:
         print(f"[top-tier]   (+{skip_line}).")
     print("[top-tier] downloaded models are available to serve. Use the normal "
-          "launch path (e.g. `llama-ai <model-name>`) to start llama-server — "
+          "launch path (e.g. `llgenie <model-name>`) to start llama-server — "
           "`--download-top-tier` only downloads; it never auto-starts the server.")
     for i, c in enumerate(completed, 1):
         print(f"  {i}. {c['repo']}::{c['filename']}  -> {c['dest_path']}")
@@ -1126,7 +1126,7 @@ def main():
     ap.add_argument("--download-top-tier", action="store_true",
                     help="discover + download the currently-trending top-tier GGUF model(s) "
                          "that fit the actual GPU/CPU card. DOWNLOAD ONLY — never auto-starts "
-                         "llama-server; serve a downloaded model separately with `llama-ai <name>`.")
+                         "llama-server; serve a downloaded model separately with `llgenie <name>`.")
     ap.add_argument("--count", type=int, default=5,
                     help="with --download-top-tier: number of distinct PROVIDERS to download "
                          "(each yields high + lower quants, default 5 = variety of what's popular)")

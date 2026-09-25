@@ -4,7 +4,7 @@
 # `int | None` is a runtime TypeError on 3.9.
 from __future__ import annotations
 
-"""llama-ai watch-loop DISPATCHER — host crontab entrypoint.
+"""llgenie watch-loop DISPATCHER — host crontab entrypoint.
 
 Model: each crontab tick runs THIS dispatcher, which:
   1. finalizes merge-ready PRs (green CI + APPROVED review + no open threads +
@@ -29,7 +29,7 @@ PARALLEL-SAFETY:
 STALE-WORKTREE CLEANUP (issue #29 + issue #45): after a PR merges to `main`, the
 merged branch's worktree + local branch + worker lock/prompt/log files become
 stale and accumulate. Each tick, after the merge gate, the dispatcher cleans
-every `feat/*` worktree under ../llama-ai-wt/ whose HEAD is an ancestor of
+every `feat/*` worktree under ../llgenie-wt/ whose HEAD is an ancestor of
 origin/main (fully merged). In-flight worktrees and worktrees whose worker is
 still alive are never touched; `--dry` reports what would be cleaned without
 deleting. issue #45 closes the REMOTE gap: `merge_pr` passes
@@ -62,8 +62,8 @@ import urllib.request
 REPO = "/Users/andy/repository/git/llama-ai"
 LOGS = f"{REPO}/.watchloop/logs"
 RUN = f"{REPO}/.watchloop/run"
-WORKTREE_BASE = os.path.normpath(f"{REPO}/../llama-ai-wt")
-API = "https://api.github.com/repos/asimov-agent/llama-ai"
+WORKTREE_BASE = os.path.normpath(f"{REPO}/../llgenie-wt")
+API = "https://api.github.com/repos/asimov-agent/llgenie"
 HERMES = "/Users/andy/.local/bin/hermes"
 
 # Worker model override. The profile default is `llm-local` (the local 35B), which
@@ -457,7 +457,7 @@ def _branch_exists(branch: str) -> bool:
 
 
 def ensure_worktree(branch: str, slug: str) -> str:
-    wd = f"{REPO}/../llama-ai-wt/{slug}"
+    wd = f"{REPO}/../llgenie-wt/{slug}"
     # Always refresh the remote tip first so BOTH new and existing worktrees
     # branch/resume from the newest origin/main, not a stale one.  The fetch
     # also makes `origin/<branch>` visible so _branch_exists can see remote-only
@@ -641,7 +641,7 @@ def cleanup_merged_worktrees(dry: bool = False) -> set:
 
 
 def worker_prompt(num: int, title: str, slug: str, branch: str, wd: str, branch_log: str) -> str:
-    return f"""You are the DEDICATED worker for llama-ai issue #{num} ("{title}").
+    return f"""You are the DEDICATED worker for llgenie issue #{num} ("{title}").
 
 Context: repo={REPO}, worktree={wd}, branch={branch}. AGENTS.md is loaded (cwd)
 and is your durable rulebook — follow its Background watch loop + OpenSpec-first
@@ -737,7 +737,7 @@ def repair_prompt(num: int, title: str, slug: str, branch: str, wd: str,
                   branch_log: str, reasons: list[str]) -> str:
     """Prompt for a REPAIR worker bound to an existing PR (issue #42)."""
     why = "; ".join(reasons)
-    return f"""You are the DEDICATED REPAIR worker for llama-ai issue #{num} ("{title}").
+    return f"""You are the DEDICATED REPAIR worker for llgenie issue #{num} ("{title}").
 
 Context: repo={REPO}, worktree={wd}, branch={branch}. AGENTS.md is loaded (cwd)
 and is your durable rulebook. An OPEN PR already exists for this work ({branch});
@@ -864,7 +864,7 @@ def spawn_worker(issue) -> None:
     title = issue["title"]
     slug = (re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-") or f"issue-{num}")[:50]
     branch = f"feat/{slug}"
-    wd = f"{REPO}/../llama-ai-wt/{slug}"
+    wd = f"{REPO}/../llgenie-wt/{slug}"
     branch_log = f"{LOGS}/feat-{slug}.log"
     lk = f"{RUN}/worker-{branch.replace('/', '_')}.running"
 
@@ -895,7 +895,7 @@ def spawn_repair_worker(pr) -> bool:
             "cannot map to a worker — skip")
         return False
     slug = slug_from_branch(branch)
-    wd = f"{REPO}/../llama-ai-wt/{slug}"
+    wd = f"{REPO}/../llgenie-wt/{slug}"
     branch_log = f"{LOGS}/feat-{slug}.log"
     lk = f"{RUN}/worker-{branch.replace('/', '_')}.running"
     reasons = pr.get("_repair_reasons", [])

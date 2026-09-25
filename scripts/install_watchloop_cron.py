@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install / uninstall the llama-ai watch-loop host crontab entry (issue #65).
+"""Install / uninstall the llgenie watch-loop host crontab entry (issue #65).
 
 The watch loop is a `*/20 * * * *` crontab entry that launches the dispatcher
 (`scripts/watchloop_dispatch.py`) as a `project-manager` Hermes session so the
@@ -153,11 +153,11 @@ def uninstall(dry_run: bool = False) -> int:
 
 def render_snapshot() -> str:
     """A human-readable preview of the canonical entry (no side effects)."""
-    return f"# llama-ai watch loop (crontab)\n{render_entry()}"
+    return f"# llgenie watch loop (crontab)\n{render_entry()}"
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="Install/uninstall the llama-ai watch-loop crontab entry")
+    ap = argparse.ArgumentParser(description="Install/uninstall the llgenie watch-loop crontab entry")
     ap.add_argument("action", choices=["install", "uninstall", "snapshot"])
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--python", default=None, help="python3 to embed (overrides per-OS auto)")

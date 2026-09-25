@@ -1,4 +1,4 @@
-# Dev/test-only dependencies for llama-ai (pytest for the test suite).
+# Dev/test-only dependencies for llgenie (pytest for the test suite).
 # SINGLE source of truth for dev deps: compile to requirements-dev.txt via
 # `make -C tools generate-requirements-dev` (pip-compile). Never hand-edit
 # requirements-dev.txt.

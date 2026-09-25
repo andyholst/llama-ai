@@ -26,15 +26,15 @@ echo "$ENVFILE is gitignored and untracked (good)."
 
 # 3. Verify write access via Contents API (create + delete a probe).
 curl -s -X PUT -H "Authorization: Bearer $TOK" -H "Accept: application/vnd.github+json" \
-  "https://api.github.com/repos/asimov-agent/llama-ai/contents/$PROBE" \
+  "https://api.github.com/repos/asimov-agent/llgenie/contents/$PROBE" \
   -d '{"message":"write-probe","content":"'"$(printf 'probe' | base64)"'"}' \
   | python3 -c "import sys,json;d=json.load(sys.stdin);print('WRITE OK sha',d.get('content',{}).get('sha')) if d.get('content') else print('WRITE DENIED:',d.get('message'))"
 
 # 4. Cleanup probe.
-SHA="$(curl -s -H "Authorization: Bearer $TOK" "https://api.github.com/repos/asimov-agent/llama-ai/contents/$PROBE" | python3 -c "import sys,json;print(json.load(sys.stdin).get('sha',''))")"
+SHA="$(curl -s -H "Authorization: Bearer $TOK" "https://api.github.com/repos/asimov-agent/llgenie/contents/$PROBE" | python3 -c "import sys,json;print(json.load(sys.stdin).get('sha',''))")"
 if [ -n "$SHA" ]; then
   curl -s -X DELETE -H "Authorization: Bearer $TOK" -H "Accept: application/vnd.github+json" \
-    "https://api.github.com/repos/asimov-agent/llama-ai/contents/$PROBE" \
+    "https://api.github.com/repos/asimov-agent/llgenie/contents/$PROBE" \
     -d '{"message":"probe cleanup","sha":"'"$SHA"'"}' >/dev/null
   echo "Probe cleaned up."
 fi

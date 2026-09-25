@@ -83,7 +83,7 @@ class TestDispatchE2EHealthyWorker:
         run, logs = _patch_paths(tmp_path, monkeypatch)
         worktree = tmp_path / "worktree"
         readme = worktree / "README.md"
-        readme.write_text("# llama-ai\n")
+        readme.write_text("# llgenie\n")
         worker = _make_fake_worker(tmp_path, "README.md")
         monkeypatch.setattr(wd, "HERMES", str(worker))
         branch = "feat/e2e-healthy"
@@ -133,7 +133,7 @@ class TestDispatchE2EStuckReclaim:
         run, logs = _patch_paths(tmp_path, monkeypatch)
         worktree = tmp_path / "worktree"
         readme = worktree / "README.md"
-        readme.write_text("# llama-ai\n")
+        readme.write_text("# llgenie\n")
         worker = _make_fake_worker(tmp_path, "README.md")
         monkeypatch.setattr(wd, "HERMES", str(worker))
         monkeypatch.setattr(wd, "STUCK_LOG_STALE_SECONDS", 2)

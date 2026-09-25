@@ -66,7 +66,7 @@ def _resolve_expected_bytes(repo, filename, label, expected_bytes):
     import urllib.request
     try:
         url = f"https://huggingface.co/api/models/{repo}/tree/main?recursive=true"
-        req = urllib.request.Request(url, headers={"User-Agent": f"llama-ai/{label}"})
+        req = urllib.request.Request(url, headers={"User-Agent": f"llgenie/{label}"})
         with urllib.request.urlopen(req, timeout=30) as r:
             data = json.load(r)
         for f in data:

@@ -377,7 +377,7 @@ def test_download_progress_shows_percentage():
 
 
 def test_cli_download_top_tier_dry_run_detailed():
-    """Story: the REAL CLI `llama-ai --download-top-tier --dry` runs end-to-end and
+    """Story: the REAL CLI `llgenie --download-top-tier --dry` runs end-to-end and
     prints a detailed, structured preview — the actual entry point, not just a helper.
 
     Given  I run the real launcher binary with `--download-top-tier --dry --count 2`,

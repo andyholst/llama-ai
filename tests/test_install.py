@@ -1,7 +1,7 @@
-"""Host install tests for llama-ai.
+"""Host install tests for llgenie.
 
-These require the `make install` artifacts: `~/bin/llama-ai` launcher,
-`~/bin/llama_ai.py` symlink, `~/bin/llama-server` symlink, and a populated
+These require the `make install` artifacts: `~/bin/llgenie` launcher,
+`~/bin/llgenie.py` symlink, `~/bin/llama-server` symlink, and a populated
 `~/models` dir.
 
 NO-SKIP POLICY: a missing prerequisite is a LOUD FAILURE, never a skip. If these
@@ -42,22 +42,22 @@ def _server_bin() -> Path | None:
 # make install produced the launcher + symlinks
 # ---------------------------------------------------------------------------
 def test_launcher_exists_and_executable(launcher):
-    assert launcher.is_file(), "~/bin/llama-ai missing; run 'make install' first"
+    assert launcher.is_file(), "~/bin/llgenie missing; run 'make install' first"
     assert os.access(launcher, os.X_OK), f"{launcher} not executable"
 
 
 def test_launcher_is_venv_based():
     # The launcher execs llama_serve.py with the gguf venv python so gguf/numpy
     # resolve without touching the env. Validate it references the venv.
-    text = (BIN / "llama-ai").read_text()
+    text = (BIN / "llgenie").read_text()
     assert "scripts/llama_serve.py" in text, "launcher does not call llama_serve.py"
     assert "llama-gguf-tools/.venv" in text, "launcher does not use the gguf venv python"
 
 
 def test_llama_ai_symlink_points_at_repo():
-    link = BIN / "llama_ai.py"
-    assert link.is_symlink() or link.is_file(), "~/bin/llama_ai.py missing"
-    assert link.resolve().is_file(), "~/bin/llama_ai.py resolves to a missing file"
+    link = BIN / "llgenie.py"
+    assert link.is_symlink() or link.is_file(), "~/bin/llgenie.py missing"
+    assert link.resolve().is_file(), "~/bin/llgenie.py resolves to a missing file"
 
 
 def test_llama_server_on_path():
@@ -74,17 +74,17 @@ def test_llama_server_on_path():
 # ---------------------------------------------------------------------------
 @pytest.mark.install
 def test_installed_launcher_lists_at_least_one_model(launcher):
-    assert launcher.is_file(), "~/bin/llama-ai missing; run 'make install' first"
+    assert launcher.is_file(), "~/bin/llgenie missing; run 'make install' first"
     proc = subprocess.run([str(launcher), "--list"], capture_output=True, text=True, timeout=60)
-    assert proc.returncode == 0, f"llama-ai --list failed: {proc.stderr}"
-    assert proc.stdout.strip(), "llama-ai --list printed nothing"
+    assert proc.returncode == 0, f"llgenie --list failed: {proc.stderr}"
+    assert proc.stdout.strip(), "llgenie --list printed nothing"
     assert any(".gguf" in l for l in proc.stdout.splitlines()), "no model lines in --list"
 
 
 @pytest.mark.install
 def test_launcher_dry_run_picks_a_unique_model(launcher):
-    """llama-ai <substring> --dry builds a command for a unique model."""
-    assert launcher.is_file(), "~/bin/llama-ai missing; run 'make install' first"
+    """llgenie <substring> --dry builds a command for a unique model."""
+    assert launcher.is_file(), "~/bin/llgenie missing; run 'make install' first"
     models = sorted(MODELS_ROOT.rglob("*.gguf"), key=lambda p: p.stat().st_size)
     assert models, (
         f"no .gguf under {MODELS_ROOT}. Run 'make download-test-model' first — missing "
@@ -99,7 +99,7 @@ def test_launcher_dry_run_picks_a_unique_model(launcher):
     # llama-server, unknown model) or prints a helpful message. Just assert it
     # did not hang/crash and produced a deterministic message.
     out = (proc.stdout or "") + (proc.stderr or "")
-    assert proc.returncode in (0, 1, 2), f"llama-ai --dry crashed with rc={proc.returncode}: {out}"
+    assert proc.returncode in (0, 1, 2), f"llgenie --dry crashed with rc={proc.returncode}: {out}"
     assert out.strip(), "--dry printed nothing"
 
 
@@ -114,7 +114,7 @@ def test_launcher_script_terminates_with_missing_server(monkeypatch):
     unit test in test_llama_ai.py; here we sanity-check the runnable script's
     resolve path imports cleanly and the module carries the requirement.
     """
-    import scripts.llama_serve as llama_ai  # module backing ~/bin/llama_ai.py
+    import scripts.llama_serve as llama_ai  # module backing ~/bin/llgenie.py
     assert hasattr(llama_ai, "resolve_llama_server")
     # document the resolve contract in the installed script text
     script = (REPO_ROOT / "scripts/llama_serve.py").read_text()
