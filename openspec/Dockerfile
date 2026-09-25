@@ -1,4 +1,4 @@
-# OpenSpec CLI container for llama-ai.
+# OpenSpec CLI container for llgenie.
 #
 # Runs the official @fission-ai/openspec CLI inside a Node image. The repo is
 # bind-mounted at /repo (working dir), so `openspec new change <name>` and

@@ -1,4 +1,4 @@
-# Project Instructions for Hermes Agent in llama-ai
+# Project Instructions for Hermes Agent in llgenie
 
 MUST: follow this file over habit and memory.
 NEVER: skip these rules to be “helpful.”
@@ -10,7 +10,7 @@ workflow. Follow it for any change.
 
 ## Execution environment
 
-- **Foreground `terminal` calls run on the real host** (`~/repository/git/llama-ai`).
+- **Foreground `terminal` calls run on the real host** (`~/repository/git/llgenie`).
   This is a plain macOS host with `node`/`npm`, `nerdctl` (Colima containerd),
   a gguf Python 3.10 venv at `~/llama-gguf-tools/.venv`, and a populated
   `~/models/**/*.gguf` tree. There is no separate sandbox — the host is canonical.
@@ -133,8 +133,8 @@ the checked-out working tree. For each new issue you start, create an isolated
 **git worktree** off `main`:
 
 ```bash
-git worktree add -b feat/<kebab-name> ../llama-ai-wt/<kebab-name> main
-# work inside ../llama-ai-wt/<kebab-name>: OpenSpec change first, then implement
+git worktree add -b feat/<kebab-name> ../llgenie-wt/<kebab-name> main
+# work inside ../llgenie-wt/<kebab-name>: OpenSpec change first, then implement
 ```
 
 - The worktree lives OUTSIDE the main checkout (sibling dir), so parallel issues
@@ -147,7 +147,7 @@ git worktree add -b feat/<kebab-name> ../llama-ai-wt/<kebab-name> main
   worktree, you may do so with `gh pr merge <N> --merge --delete-branch` from the
   main checkout and remove the worktree:
   ```bash
-  git worktree remove ../llama-ai-wt/<kebab-name>
+  git worktree remove ../llgenie-wt/<kebab-name>
   ```
 - The main checkout's branch should stay on `main` (or the active PR branch of
   whatever you're interactively helping on), with concurrency handled by
@@ -166,7 +166,7 @@ that each tick:
    **NOT behind** `main` (never merge an out-of-sync / behind PR — see issue #9).
 2. **Spawns ONE dedicated parallel worker per orphaned issue** — for every open
    issue with no live branch/PR, it creates its own isolated git worktree (`git
-   worktree add -b feat/<kebab> ../llama-ai-wt/<kebab> origin/main`) and spawns a
+   worktree add -b feat/<kebab> ../llgenie-wt/<kebab> origin/main`) and spawns a
    dedicated background `project-manager` Hermes session **whose cwd is that
    worktree** (so AGENTS.md loads) that drives ONLY that issue to a PR
    (OpenSpec-first → implement → validate → push → PR). Issues run in PARALLEL —
@@ -176,7 +176,7 @@ that each tick:
    after a PR merges; issue #45: and the REMOTE branch).** After a PR merges to
    `main`, the dispatcher automatically
    removes the now-stale worktree (`git worktree remove --force
-   ../llama-ai-wt/<kebab>`), the merged local `feat/<kebab>` branch, the
+   ../llgenie-wt/<kebab>`), the merged local `feat/<kebab>` branch, the
    per-worker `.watchloop/run/worker-feat_<kebab>.running/.prompt` +
    `.watchloop/logs/feat-<kebab>.log` artifacts, AND the REMOTE branch (`git
    push origin --delete feat/<kebab>`) — so the loop leaves no dead
@@ -273,12 +273,12 @@ git merge-base --is-ancestor origin/main HEAD 2>/dev/null \
 
 - **Before creating a worktree**, FIRST pull the latest main so the branch is cut from the newest tip:
   ```bash
-  cd /Users/andy/repository/git/llama-ai && git fetch origin main
-  git worktree add -b feat/<kebab> ../llama-ai-wt/<kebab> origin/main
+  cd /Users/andy/repository/git/llgenie && git fetch origin main
+  git worktree add -b feat/<kebab> ../llgenie-wt/<kebab> origin/main
   ```
 - **Before resuming/using an existing worktree**, refresh it against the latest remote main BEFORE touching any code — never start from a stale tip:
   ```bash
-  cd ../llama-ai-wt/<kebab> && git fetch origin main && git merge-base --is-ancestor origin/main HEAD 2>/dev/null || git rebase origin/main
+  cd ../llgenie-wt/<kebab> && git fetch origin main && git merge-base --is-ancestor origin/main HEAD 2>/dev/null || git rebase origin/main
   ```
 - **Right before you push / open a PR**, re-run the fetch+rebase above ONE final time so the PR is never behind.
 
@@ -406,7 +406,7 @@ python3 scripts/loop_harness.py
   with a trailing newline. `make lint-fix` appends the missing newlines
   reproducibly. (.editorconfig enforces this in-editor.)
 - **`health` stage (`make test-health`) is mandatory and end-to-end real:** it
-  launches the installed `~/bin/llama-ai` with a lightweight model
+  launches the installed `~/bin/llgenie` with a lightweight model
   (`~/models/Qwen/8GB/qwen2.5-0.5b-instruct-q4_0.gguf`, auto-fetched by
   `make download-test-model`), waits for `/health`, POSTs `"hi"` to
   `/v1/chat/completions`, and asserts a real text reply. This proves the host
@@ -520,7 +520,7 @@ change that touches the model launcher / health / serving as "done", YOU must
 also run the check **on the host with the actual GPU (Metal)** and record it:
 
 - The host's Metal `llama-server` (built by `~/repository/git/llama.cpp`) backs
-  the `~/bin/llama-ai` launcher. Run the qwen lightweight model's health check
+  the `~/bin/llgenie` launcher. Run the qwen lightweight model's health check
   through the GPU path, not just the container/CPU path:
   ```bash
   # 1. the full containerized loop (fast, CPU+container proof):
@@ -529,18 +529,18 @@ also run the check **on the host with the actual GPU (Metal)** and record it:
   # 2. the GPU/Metal proof — launch the host launcher (which uses the REAL
   #    Metal llama-server at ~/bin) with the Qwen/8GB model and curl its
   #    /health + a chat "hi":
-  "$HOME/bin/llama-ai" 0.5b --port 18080 &      # uses the Metal (GPU) binary
+  "$HOME/bin/llgenie" 0.5b --port 18080 &      # uses the Metal (GPU) binary
   curl -s "http://127.0.0.1:18080/health"
   curl -s -X POST "http://127.0.0.1:18080/v1/chat/completions" -H 'Content-Type: application/json' \
        -d '{"messages":[{"role":"user","content":"hi"}],"max_tokens":16}'
   ```
   Even simpler: `tests/test_health.py` already launches the **host**
-  `~/bin/llama-ai` launcher, which uses the **Metal llama-server** (GPU) — so on
+  `~/bin/llgenie` launcher, which uses the **Metal llama-server** (GPU) — so on
   a host with the venv installed, `make test-health` IS the GPU/Metal
   verification.
 - **Mandatory, not optional:** do NOT declare "green/done" from the container
   loop alone. You must additionally run the host/Metal `test-health` (the one
-  that uses `~/bin/llama-ai` with the Metal binary) against the `Qwen/8GB`
+  that uses `~/bin/llgenie` with the Metal binary) against the `Qwen/8GB`
   model and see the GPU reply. Record the GPU/Metal result in the loop summary.
 - If the host GPU (Metal) backend is genuinely absent, state that explicitly and
   report the CPU/container result Honesty instead of pretending the GPU path ran.
@@ -561,8 +561,8 @@ path.
 Each verification step is an independent target; `make loop`/`loop-harness`
 chains them all.
 
-- `make install` — build gguf venv, write `~/bin/llama-ai` launcher, symlink
-  `~/bin/llama_ai.py` + `~/bin/llama-server`, smoke-test (needs `~/models`).
+- `make install` — build gguf venv, write `~/bin/llgenie` launcher, symlink
+  `~/bin/llgenie.py` + `~/bin/llama-server`, smoke-test (needs `~/models`).
 - `make uninstall` — remove launcher + symlinks (keeps venv).
 - `make venv-install` / `make -C tools venv-install` — build the gguf venv.
 - `make download-test-model` — fetch the lightweight health-check model

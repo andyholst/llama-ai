@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Basic loop harness for llama-ai.
+"""Basic loop harness for llgenie.
 
 Runs the verification stages in a fixed order and fails closed: if any stage
 exits non-zero, the remaining stages still run (to report all failures) but the
@@ -48,7 +48,7 @@ STAGES = [
     # issue #63: REAL agent-spawn e2e (fake worker does README issue-work, hung
     # worker is killed+respawned) — runs only *_e2e*.py, within a minute.
     ("agents-e2e", ["make", "test-agents-e2e"]),
-    # host install test — verifies the REAL ~/bin/llama-ai + ~/models artifacts
+    # host install test — verifies the REAL ~/bin/llgenie + ~/models artifacts
     # (skipped in-container, runs the host install assertions on the host)
     ("install", ["make", "test-install-host"]),
     # end-to-end health: launch the tiny model, answer 'hi' on the endpoint
@@ -67,7 +67,7 @@ STAGES = [
     # is the completion half of the gate so a worker can't land unticked tasks.
     ("openspec-tasks", ["make", "openspec-tasks-check"]),
     # ALWAYS clean up orphaned test containers last (even if earlier stages
-    # failed) so no leftover `llama-ai/test` containers accumulate on the host
+    # failed) so no leftover `llgenie/test` containers accumulate on the host
     # or CI runner.
     ("clean", ["make", "test-clean"]),
 ]

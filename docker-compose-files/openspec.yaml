@@ -3,7 +3,7 @@
 # Repo is mounted at /repo (rw); the CLI reads/writes the repo's openspec/ tree.
 services:
   openspec:
-    image: llama-ai/openspec:latest
+    image: llgenie/openspec:latest
     build:
       context: ../openspec
       dockerfile: Dockerfile

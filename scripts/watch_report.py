@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""watch_report.py — human-readable observability for the llama-ai watch loop.
+"""watch_report.py — human-readable observability for the llgenie watch loop.
 
 Answers three questions about the autonomous cron agents (project-manager
 sessions spawned by scripts/watchloop_dispatch.py):

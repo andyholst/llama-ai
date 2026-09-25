@@ -1,4 +1,4 @@
-# llama-ai test container: runs every verification stage containerized so the
+# llgenie test container: runs every verification stage containerized so the
 # same stages run identically on the dev host (nerdctl/colima) and in CI (docker).
 #
 #   make test-image        # build
@@ -49,6 +49,6 @@ RUN git clone --depth 1 https://github.com/ggerganov/llama.cpp.git /tmp/llama.cp
 
 WORKDIR /repo
 
-# llama-server is on PATH; llama_ai.py resolves it (LLAMA_SERVER unset -> PATH).
+# llama-server is on PATH; llgenie.py resolves it (LLAMA_SERVER unset -> PATH).
 ENV LLAMA_SERVER=
 CMD ["--help"]

@@ -104,7 +104,7 @@ def check(report: bool = True, fix: bool = False) -> int:
 
 def main() -> int:
     import argparse
-    ap = argparse.ArgumentParser(description="Linefeed lint for llama-ai")
+    ap = argparse.ArgumentParser(description="Linefeed lint for llgenie")
     ap.add_argument("--fix", action="store_true", help="append a trailing newline to files missing it")
     args = ap.parse_args()
     return check(fix=args.fix)

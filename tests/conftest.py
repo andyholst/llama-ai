@@ -1,4 +1,4 @@
-"""Shared pytest fixtures for the llama-ai test suite.
+"""Shared pytest fixtures for the llgenie test suite.
 
 All tests run under the gguf venv python (see Makefile `test` target). We
 expose the repo root so tests can locate scripts/llama_serve.py / Makefile / tools.
@@ -29,8 +29,8 @@ def repo_root() -> Path:
 
 @pytest.fixture(scope="session")
 def launcher() -> Path:
-    """Executable ~/bin/llama-ai installed by `make install`."""
-    return BIN / "llama-ai"
+    """Executable ~/bin/llgenie installed by `make install`."""
+    return BIN / "llgenie"
 
 
 @pytest.fixture(scope="session")

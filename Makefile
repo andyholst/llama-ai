@@ -1,17 +1,17 @@
-# llama-ai install Makefile.
+# llgenie install Makefile.
 #
 # `make install` does the WHOLE setup so you never touch the venv manually:
 #   1. builds the Python 3.10 gguf-tooling venv (./tools/venv-install)
-#   2. writes a runnable launcher `~/bin/llama-ai` that executes `llama_ai.py`
+#   2. writes a runnable launcher `~/bin/llgenie` that executes `llgenie.py`
 #      with the venv's python (so `gguf`/`numpy` resolve without extra steps)
-#   3. symlinks `~/bin/llama_ai.py` -> this repo's `llama_ai.py`
+#   3. symlinks `~/bin/llgenie.py` -> this repo's `llgenie.py`
 #   4. verifies the install with a `--list` smoke run
 #
 # After `make install` you can simply run:
-#       llama-ai                 # interactive picker
-#       llama-ai --list          # list models
-#       llama-ai qwen            # launch by substring
-#       llama-ai --dry qwen      # print the tuned command, don't run
+#       llgenie                 # interactive picker
+#       llgenie --list          # list models
+#       llgenie qwen            # launch by substring
+#       llgenie --dry qwen      # print the tuned command, don't run
 
 SHELL   := /bin/bash
 HOME    := $(shell printf '%s' "$$HOME")
@@ -26,8 +26,8 @@ VENV    := $(HOME)/llama-gguf-tools/.venv
 # when the venv is absent — e.g. a bare GitHub Actions runner. This lets the
 # same Makefile test/lint targets run identically on the host and in CI.
 PY      := $(if $(wildcard $(VENV)/bin/python),$(VENV)/bin/python,python3)
-LAUNCHER := $(BIN)/llama-ai
-# llama.cpp llama-server binary — symlinked into ~/bin so llama_ai.py resolves
+LAUNCHER := $(BIN)/llgenie
+# llama.cpp llama-server binary — symlinked into ~/bin so llgenie.py resolves
 # it as `llama-server` on PATH. Override if built elsewhere.
 LLAMA_SERVER_BIN ?= $(HOME)/repository/git/llama.cpp/build/bin/llama-server
 
@@ -41,15 +41,15 @@ RUNTIME ?= nerdctl
 ifeq ($(shell command -v $(RUNTIME) >/dev/null 2>&1 && echo yes),)
 RUNTIME = docker
 endif
-OS_IMG := llama-ai/openspec:latest
+OS_IMG := llgenie/openspec:latest
 
 all: install
 
 # ---- full install: venv + launcher + symlink + smoke test --------------
 install: venv-install link smoke
 	@echo
-	@echo "Installed. Run '$(LAUNCHER)' (e.g. 'llama-ai --list', 'llama-ai qwen')."
-	@echo "Symlink: $(BIN)/llama_ai.py -> $(REPO)/scripts/llama_serve.py"
+	@echo "Installed. Run '$(LAUNCHER)' (e.g. 'llgenie --list', 'llgenie qwen')."
+	@echo "Symlink: $(BIN)/llgenie.py -> $(REPO)/scripts/llama_serve.py"
 
 # ---- 1. build the gguf-tooling venv (Python 3.10 + gguf + numpy) --------
 venv-install:
@@ -59,19 +59,19 @@ venv-install:
 # ---- 2+3. launcher wrapper + symlink into ~/bin -------------------------
 link:
 	@mkdir -p "$(BIN)"
-	@printf '#!/usr/bin/env bash\n# llama-ai launcher -> runs %s with the %s venv.\n# Prepend ~/bin to PATH so the llama-server symlink there resolves in any shell.\nexport PATH="$(BIN):$$PATH"\nexec "%s" "%s" "$$@"\n' \
+	@printf '#!/usr/bin/env bash\n# llgenie launcher -> runs %s with the %s venv.\n# Prepend ~/bin to PATH so the llama-server symlink there resolves in any shell.\nexport PATH="$(BIN):$$PATH"\nexec "%s" "%s" "$$@"\n' \
 		"$(REPO)/scripts/llama_serve.py" "$(VENV)" "$(PY)" "$(REPO)/scripts/llama_serve.py" > "$(LAUNCHER)"
 	@chmod +x "$(LAUNCHER)"
-	@ln -sfn "$(REPO)/scripts/llama_serve.py" "$(BIN)/llama_ai.py"
+	@ln -sfn "$(REPO)/scripts/llama_serve.py" "$(BIN)/llgenie.py"
 	@if [ -x "$(LLAMA_SERVER_BIN)" ]; then \
 		ln -sfn "$(LLAMA_SERVER_BIN)" "$(BIN)/llama-server"; \
 		echo "==> Symlinked ~/bin/llama-server -> $(LLAMA_SERVER_BIN)"; \
 	else \
 		echo "WARN: llama-server binary not found at $(LLAMA_SERVER_BIN)." >&2; \
-		echo "      llama_ai.py will terminate until 'llama-server' is on PATH." >&2; \
+		echo "      llgenie.py will terminate until 'llama-server' is on PATH." >&2; \
 		echo "      Set LLAMA_SERVER_BIN=<path> or add llama-server to PATH." >&2; \
 	fi
-	@echo "==> Wrote $(LAUNCHER) (exec) and symlinked ~/bin/llama_ai.py -> repo"
+	@echo "==> Wrote $(LAUNCHER) (exec) and symlinked ~/bin/llgenie.py -> repo"
 
 # ---- 4. smoke: confirm the launcher can list models ---------------------
 smoke:
@@ -79,7 +79,7 @@ smoke:
 	@if $(LAUNCHER) --list; then \
 		echo "==> OK: launcher runs and found models."; \
 	else \
-		echo "==> Launcher installed and runs. (No .gguf under ~/models yet — install succeeds; use 'llama-ai --download-top-tier' to fetch trending top-tier models, or drop a .gguf into ~/models and run 'make list'.)" >&2; \
+		echo "==> Launcher installed and runs. (No .gguf under ~/models yet — install succeeds; use 'llgenie --download-top-tier' to fetch trending top-tier models, or drop a .gguf into ~/models and run 'make list'.)" >&2; \
 	fi
 
 # ---- helpers ------------------------------------------------------------
@@ -126,7 +126,7 @@ openspec-shell: ## Interactive shell into the repo with the openspec CLI
 # /repo and llama-server is resolved via $LLAMA_SERVER (host LLAMA_BIN or CI
 # build). Bare `run` (like the openspec targets) avoids compose's `--tty`
 # console requirement under non-interactive make.
-TEST_IMG := llama-ai/test:latest
+TEST_IMG := llgenie/test:latest
 # A git WORKTREE stores its metadata in the PARENT repo's .git/worktrees/<name>
 # dir; mounting only the worktree at /repo leaves `git ls-files` broken inside
 # the container (it can't resolve the gitdir), which fails the hermetic lint
@@ -152,7 +152,7 @@ test-clean: ## Remove left-over/stopped orphaned containers of the test image (i
 	@containers=$$($(RUNTIME) ps -a -q 2>/dev/null); \
 	for c in $$containers; do \
 	  info=$$($(RUNTIME) inspect -f '{{.Image}}' $$c 2>/dev/null || echo ""); \
-	  if printf '%s' "$$info" | grep -q "llama-ai/test"; then \
+	  if printf '%s' "$$info" | grep -q "llgenie/test"; then \
 	    running=$$($(RUNTIME) inspect -f '{{.Running}}' $$c 2>/dev/null || echo "false"); \
 	    if printf '%s' "$$running" | grep -qi "false"; then \
 	      $(RUNTIME) rm -f $$c 2>/dev/null; \
@@ -185,16 +185,16 @@ test-agents-read: ## Guard: AGENTS.md must not match Hermes context-file threat 
 test-install: ## Host install tests (containerized) — skips cleanly without artifacts
 	$(TEST_RUN) python -m pytest tests/test_install.py -p no:cacheprovider -q
 
-test-install-host: ## Verify the REAL host install (make install) — runs on the host where ~/bin/llama-ai + ~/models exist
+test-install-host: ## Verify the REAL host install (make install) — runs on the host where ~/bin/llgenie + ~/models exist
 	# Runs tests/test_install.py with the gguf venv python on the HOST, so the
-	# actual `make install` artifacts (~/bin/llama-ai launcher, symlinks,
+	# actual `make install` artifacts (~/bin/llgenie launcher, symlinks,
 	# ~/bin/llama-server, ~/models) are asserted — not skipped. This is the
 	# local/AGENTS.md proof that `make install` works.
 	@echo "==> Verifying host install artifacts via tests/test_install.py"
 	@$(PY) -m pytest tests/test_install.py -p no:cacheprovider -q
 
 test-install-ci: ## REAL install tests inside the test container (NO SKIP): make install + seed model + assert artifacts, in ONE container
-	# The install tests assert HOST install artifacts (~/bin/llama-ai, ~/bin/llama_ai.py,
+	# The install tests assert HOST install artifacts (~/bin/llgenie, ~/bin/llgenie.py,
 	# llama-server on PATH, ~/models). They must not skip: so this target performs a REAL
 	# `make install` (launcher + venv + symlinks) INSIDE the container, seeds the
 	# lightweight model so --list/--dry have something, then runs the tests — all in a
@@ -228,7 +228,7 @@ test-top-tier-serve: ## Download a lightweight top-tier model, load it, answer '
 test-top-tier-serve-ci: ## Serve test inside the test container (CI/CPU): download lightweight, load, 'hi', RAM.
 	$(TEST_RUN) python -m pytest tests/test_top_tier_serve.py -p no:cacheprovider -q -s -m acceptance
 
-test-top-tier-cli-ci: ## REAL CLI dry-run in the test container: llama-ai --download-top-tier [--family] --dry (no download/network writes)
+test-top-tier-cli-ci: ## REAL CLI dry-run in the test container: llgenie --download-top-tier [--family] --dry (no download/network writes)
 	# Run the ACTUAL launcher entry point end-to-end with --dry, verifying the real
 	# dispatch (main -> _main_download_top_tier), dynamic card readout, and the ranked
 	# preview — no download and no server start. Deterministic card via LLAMA_RAM_BYTES.
@@ -264,14 +264,14 @@ chained: test-unit test-agents-read test-install test-health test openspec-valid
 	@echo "All chain steps completed."
 
 uninstall: ## Remove ONLY the launcher + symlinks in ~/bin (leaves the venv AND all repo source files)
-	# Removes just the installed artifacts: the ~/bin/llama-ai launcher, the
-	# ~/bin/llama_ai.py symlink, and the ~/bin/llama-server symlink. It MUST NOT
+	# Removes just the installed artifacts: the ~/bin/llgenie launcher, the
+	# ~/bin/llgenie.py symlink, and the ~/bin/llama-server symlink. It MUST NOT
 	# delete repo source files (scripts/llama_serve.py, scripts/hf_download.py) —
 	# those live in the checkout/worktree and are tracked in git; deleting them
 	# breaks a subsequent `make install` from the same tree. Uninstall only
 	# undoes what `make install` wrote into ~/bin.
-	@rm -f "$(LAUNCHER)" "$(BIN)/llama_ai.py" "$(BIN)/llama-server"
-	@echo "Removed $(LAUNCHER), $(BIN)/llama_ai.py, and $(BIN)/llama-server"
+	@rm -f "$(LAUNCHER)" "$(BIN)/llgenie.py" "$(BIN)/llama-server"
+	@echo "Removed $(LAUNCHER), $(BIN)/llgenie.py, and $(BIN)/llama-server"
 	@echo "(venv kept at $(VENV) and repo source untouched; 'make -C tools clean' to drop requirements.txt)"
 
 # ---- watch-loop host crontab install/uninstall (issue #65) ----------------

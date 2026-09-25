@@ -8,7 +8,7 @@
 #   fake-crontab -l         # print the current lines
 #   fake-crontab -          # replace from stdin
 set -u
-FILE="${FAKE_CRONTAB_FILE:-${TMPDIR:-/tmp}/llama-ai-fake-crontab}"
+FILE="${FAKE_CRONTAB_FILE:-${TMPDIR:-/tmp}/llgenie-fake-crontab}"
 
 case "${1:-}" in
   -l)

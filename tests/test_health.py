@@ -1,11 +1,11 @@
-"""Host end-to-end health check for llama-ai.
+"""Host end-to-end health check for llgenie.
 
 Part of the loop harness (`make loop` -> `health` stage). Verifies the
 installed entry point works by actually running a model and answering a prompt:
 
   1. locate the lightweight test model under ~/models (it must already be
      downloaded into the right GPU tier — run `make download-test-model`);
-  2. launch `$HOME/bin/llama-ai` (the installed launcher) on a random high port
+  2. launch `$HOME/bin/llgenie` (the installed launcher) on a random high port
      so it never clashes with a user server already on 11434;
   3. poll GET /health until the server reports ready;
   4. POST a prompt ("hi") to /v1/chat/completions and assert we get a text
@@ -38,7 +38,7 @@ HEALTH_MODEL = "0.5b"
 HEALTH_TIER = MODELS_ROOT / "Qwen" / "8GB"
 MODEL_FILE = HEALTH_TIER / "qwen2.5-0.5b-instruct-q4_0.gguf"
 
-LAUNCHER = BIN / "llama-ai"           # installed wrapper (runs llama_serve.py w/ venv py)
+LAUNCHER = BIN / "llgenie"           # installed wrapper (runs llama_serve.py w/ venv py)
 
 
 def _pick_port() -> int:
@@ -116,7 +116,7 @@ def test_health_endpoint_answers_hi():
     port = _pick_port()
     url = _base_url(port)
 
-    # Launch the installed `~/bin/llama-ai` wrapper when present (the exact host
+    # Launch the installed `~/bin/llgenie` wrapper when present (the exact host
     # install path the loop cares about). On a bare CI runner with no install we
     # fall back to running repo scripts/llama_serve.py directly with $LLAMA_SERVER (the
     # CPU-built binary) — so the SAME health check runs locally and in CI.
