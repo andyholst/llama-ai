@@ -264,7 +264,7 @@ jobs:
             make install-prism-cpu
             srv="$(readlink ~/bin/llama-server)"
             [ -x "$srv" ] || { echo "prism+cpu: installed server not executable"; exit 1; }
-            "$srv" --version | grep -m1 version || { echo "prism+cpu --version FAILED"; exit 1; }
+            "$srv" --version 2>&1 | grep -m1 version || { echo "prism+cpu --version FAILED"; exit 1; }
             "$srv" --help >/dev/null 2>&1 || { echo "prism+cpu --help FAILED"; exit 1; }
             echo "prism+cpu: make install OK -> $srv"
             python3 scripts/ci_health.py --server-bin "$srv"
@@ -278,7 +278,7 @@ jobs:
             make install-prism-cuda
             srv="$(readlink ~/bin/llama-server)"
             [ -x "$srv" ] || { echo "prism+cuda: installed server not executable"; exit 1; }
-            "$srv" --version | grep -m1 version || { echo "prism+cuda --version FAILED"; exit 1; }
+            "$srv" --version 2>&1 | grep -m1 version || { echo "prism+cuda --version FAILED"; exit 1; }
             "$srv" --help >/dev/null 2>&1 || { echo "prism+cuda --help FAILED"; exit 1; }
             ldd "$srv" 2>/dev/null | grep -Eq "libcudart|libcublas" \
               || { echo "prism+cuda: installed server does NOT link cuda runtime libs"; exit 1; }
@@ -293,7 +293,7 @@ jobs:
             make install-upstream-cpu
             srv="$(readlink ~/bin/llama-server)"
             [ -x "$srv" ] || { echo "upstream+cpu: installed server not executable"; exit 1; }
-            "$srv" --version | grep -m1 version || { echo "upstream+cpu --version FAILED"; exit 1; }
+            "$srv" --version 2>&1 | grep -m1 version || { echo "upstream+cpu --version FAILED"; exit 1; }
             "$srv" --help >/dev/null 2>&1 || { echo "upstream+cpu --help FAILED"; exit 1; }
             echo "upstream+cpu: make install OK -> $srv"
             python3 scripts/ci_health.py --server-bin "$srv"
@@ -307,7 +307,7 @@ jobs:
             make install-upstream-cuda
             srv="$(readlink ~/bin/llama-server)"
             [ -x "$srv" ] || { echo "upstream+cuda: installed server not executable"; exit 1; }
-            "$srv" --version | grep -m1 version || { echo "upstream+cuda --version FAILED"; exit 1; }
+            "$srv" --version 2>&1 | grep -m1 version || { echo "upstream+cuda --version FAILED"; exit 1; }
             "$srv" --help >/dev/null 2>&1 || { echo "upstream+cuda --help FAILED"; exit 1; }
             ldd "$srv" 2>/dev/null | grep -Eq "libcudart|libcublas" \
               || { echo "upstream+cuda: installed server does NOT link cuda runtime libs"; exit 1; }
@@ -346,7 +346,7 @@ jobs:
           SERVER_ROOT="$HOME/repository/git"
           ./scripts/build_llama_server.sh prism metal
           B="$SERVER_ROOT/prism-llama.cpp/build-metal/bin/llama-server"
-          "$B" --version | grep -m1 version || { echo "prism+metal --version FAILED"; exit 1; }
+          "$B" --version 2>&1 | grep -m1 version || { echo "prism+metal --version FAILED"; exit 1; }
           "$B" --help >/dev/null 2>&1 || { echo "prism+metal --help FAILED"; exit 1; }
           echo "prism+metal: --version/--help OK (Apple Silicon)"
       - name: Build + verify prism+cpu, run 0.5B "hi"
@@ -355,7 +355,7 @@ jobs:
           SERVER_ROOT="$HOME/repository/git"
           ./scripts/build_llama_server.sh prism cpu
           B="$SERVER_ROOT/prism-llama.cpp/build-cpu/bin/llama-server"
-          "$B" --version | grep -m1 version || { echo "prism+cpu --version FAILED"; exit 1; }
+          "$B" --version 2>&1 | grep -m1 version || { echo "prism+cpu --version FAILED"; exit 1; }
           "$B" --help >/dev/null 2>&1 || { echo "prism+cpu --help FAILED"; exit 1; }
           echo "prism+cpu: --version/--help OK"
           HF_BIN="$HOME/cihealth/bin/hf" "$HOME/cihealth/bin/python" scripts/ci_health.py --server-bin "$B"
@@ -365,7 +365,7 @@ jobs:
           SERVER_ROOT="$HOME/repository/git"
           ./scripts/build_llama_server.sh upstream metal
           B="$SERVER_ROOT/llama.cpp/build-metal/bin/llama-server"
-          "$B" --version | grep -m1 version || { echo "upstream+metal --version FAILED"; exit 1; }
+          "$B" --version 2>&1 | grep -m1 version || { echo "upstream+metal --version FAILED"; exit 1; }
           "$B" --help >/dev/null 2>&1 || { echo "upstream+metal --help FAILED"; exit 1; }
           echo "upstream+metal: --version/--help OK (Apple Silicon)"
       - name: Build + verify upstream+cpu, run 0.5B "hi"
@@ -374,7 +374,7 @@ jobs:
           SERVER_ROOT="$HOME/repository/git"
           ./scripts/build_llama_server.sh upstream cpu
           B="$SERVER_ROOT/llama.cpp/build-cpu/bin/llama-server"
-          "$B" --version | grep -m1 version || { echo "upstream+cpu --version FAILED"; exit 1; }
+          "$B" --version 2>&1 | grep -m1 version || { echo "upstream+cpu --version FAILED"; exit 1; }
           "$B" --help >/dev/null 2>&1 || { echo "upstream+cpu --help FAILED"; exit 1; }
           echo "upstream+cpu: --version/--help OK"
           HF_BIN="$HOME/cihealth/bin/hf" "$HOME/cihealth/bin/python" scripts/ci_health.py --server-bin "$B"
