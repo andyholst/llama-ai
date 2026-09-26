@@ -89,7 +89,10 @@ mkdir -p "$BUILD_DIR"
 echo "[build] configuring: cmake -S $TREE_DIR -B $BUILD_DIR -DCMAKE_BUILD_TYPE=Release $CMAKE_FLAGS"
 cmake -S "$TREE_DIR" -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release $CMAKE_FLAGS
 echo "[build] building llama-server (this is the slow part)"
-cmake --build "$BUILD_DIR" --config Release -j"$(nproc)" --target llama-server
+# Portable core count: nproc (Linux) or sysctl hw.ncpu (macOS). macOS has no
+# nproc by default; this keeps the bare-metal Mac build portable.
+CPUS="$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)"
+cmake --build "$BUILD_DIR" --config Release -j"$CPUS" --target llama-server
 
 BINARY="$BUILD_DIR/bin/llama-server"
 if [[ ! -x "$BINARY" ]]; then

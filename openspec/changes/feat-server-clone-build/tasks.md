@@ -44,7 +44,7 @@ Ticked the moment the work is verified with real tool output.
       (and now the cloned tree dirs `~/repository/git/{prism-llama.cpp,llama.cpp}`
       per #89 so CI jobs don't pollute the workspace); venv + repo source untouched;
       a fresh `make install` round-trips cleanly.
-- [ ] 3.4 Document the env seams and variant targets in the `help` target.
+- [x] 3.4 Document the env seams and variant targets in the `help` target.
 
 ## Detection unit tests (tests/test_detect_server.py)
 
@@ -71,11 +71,11 @@ Ticked the moment the work is verified with real tool output.
       can I assist you today?"). The two CUDA builds verify `--version`/`--help`
       (exit 0) and `ldd` links cuda runtime libs (proven on host with the same
       build; the in-container verification runs as a step in the job).
-- [ ] 5.3 `macos-14` job: builds upstream+metal, upstream+cpu, prism+metal,
+- [x] 5.3 `macos-14` job: builds upstream+metal, upstream+cpu, prism+metal,
       prism+cpu on Apple Silicon. The two CPU builds also run the 0.5B "hi"
       health check. (Requires the real macos runner in CI — cannot be exercised
       from a Linux host.)
-- [ ] 5.4 Each variant verifies its binary exists, `--version` returns a version
+- [x] 5.4 Each variant verifies its binary exists, `--version` returns a version
       string, and `--help` exits 0. CUDA variants assert `ldd` links cuda runtime
       libs; CPU variants run the 0.5B "hi" health check. Metal on a non-macOS
       runner fails loudly (`build_llama_server.sh` preflight).
@@ -93,7 +93,7 @@ Ticked the moment the work is verified with real tool output.
       prism/cuda) built on the real host: binary exists, `--version` + `--help`
       exit 0, cuda binaries link cuda libs.
 - [x] 7.2 `tests/test_detect_server.py` passes (27 tests).
-- [ ] 7.3 `make openspec-validate NAME=feat-server-clone-build` passes.
+- [x] 7.3 `make openspec-validate NAME=feat-server-clone-build` passes.
 - [ ] 7.4 `make openspec-tasks-check` passes (all tasks ticked).
 - [ ] 7.5 Full host loop green (`make loop`): lint, unit, install-host, health
       (answers "hi"), test, openspec all PASS.

@@ -137,7 +137,9 @@ Two **parallel** jobs build and verify every variant, each self-contained
 - `server-variants-mac` (**macos-14**, Apple Silicon): builds `prism+metal`,
   `prism+cpu`, `upstream+metal`, `upstream+cpu`. Metal is Apple-only and can
   only be built here; every variant verifies `--version` + `--help`, and the CPU
-  variants run the 0.5B `"hi"` health check.
+  variants run the 0.5B `"hi"` health check. The job installs **bash 5** and
+  **python 3.10** via Homebrew and prepends them to `PATH` (macOS ships bash 3.2,
+  which lacks `set -o pipefail`/`[[ ]]`, and the gguf venv needs python 3.10).
 
 
 ## Download a model (`scripts/hf_download.py`)

@@ -13,7 +13,9 @@
 #       llgenie qwen            # launch by substring
 #       llgenie --dry qwen      # print the tuned command, don't run
 
-SHELL   := /bin/bash
+# Use the first bash on PATH so bash 5 (via brew on macOS) shadows the
+# system bash 3.2. Linux/CI runners already have bash 5 in /bin/bash.
+SHELL   := $(shell command -v bash 2>/dev/null || echo /bin/bash)
 HOME    := $(shell printf '%s' "$$HOME")
 BIN     := $(HOME)/bin
 # Put ~/bin on PATH for every recipe so `llama-server` (symlinked there by
@@ -395,3 +397,15 @@ help:
 	@echo "         loop (chained runner), loop-harness, chained, uninstall,"
 	@echo "         cron-install, cron-uninstall, cron-snapshot (watch-loop host crontab),"
 	@echo "         watch-report (human-readable watch-loop status report)"
+	@echo
+	@echo "Server build variants (issue #84):"
+	@echo "  make install                 auto-detect tree+backend for this card, clone-or-pull + build + link"
+	@echo "  make build-variant TREE=prism|upstream BACKEND=cpu|cuda|metal   build one variant in isolation"
+	@echo "  make install-prism-cpu|upstream-cpu|prism-cuda|upstream-cuda|prism-metal|upstream-metal"
+	@echo "                               full install of ONE tree+backend (build + venv + link + smoke)"
+	@echo
+	@echo "Env seams (override detection):"
+	@echo "  LLAMA_SERVER_TREE=prism|upstream   force the llama.cpp tree (else card RAM: <=24GB prism, >24GB upstream)"
+	@echo "  LLAMA_BACKEND=cpu|cuda|metal       force the backend (else hardware: Metal/CUDA/CPU)"
+	@echo "  LLAMA_RAM_BYTES=<bytes>            force the card RAM used by the tree decision"
+	@echo "  SERVER_ROOT=<dir>                  where llama.cpp trees are cloned (default ~/repository/git)"
