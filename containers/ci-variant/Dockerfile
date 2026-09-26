@@ -19,6 +19,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         git build-essential cmake gfortran curl python3 python3-pip python3-venv \
     && rm -rf /var/lib/apt/lists/*
 
+# Make the CUDA *driver* stub (libcuda.so.1) linker-visible, exactly like a real
+# NVIDIA box. On a real machine the GPU *driver* installs libcuda.so.1 into
+# /usr/lib/x86_64-linux-gnu/ — that is what resolves the cu* driver symbols at
+# *link* time. The CUDA *toolkit* image ships no driver; its only copy of the
+# driver stub lives under <cuda>/compat/, which is NOT on the linker's default
+# search path. Shared libs (libggml-cuda.so) tolerate unresolved driver symbols
+# because they are linked lazily, but the final llama-server EXECUTABLE must
+# resolve them at link time — so without this step `llama-server` fails to link
+# in CI. Symlinking the compat stubs into the standard lib dir + ldconfig mirrors
+# a real driver install and makes the CI CUDA build byte-identical to host.
+RUN ln -sf /usr/local/cuda-12.4/compat/libcuda.so.1 /usr/lib/x86_64-linux-gnu/libcuda.so.1 \
+    && ln -sf /usr/local/cuda-12.4/compat/libcuda.so.1 /usr/lib/libcuda.so.1 \
+    && ldconfig \
+    && ldconfig -p | grep -E "libcuda\.so\.1"
+
 # Copy the compiled lockfiles (requirements.txt + requirements-dev.txt are
 # the single sources of truth, generated via make generate-requirements) and
 # the repo, then install the runtime + dev deps + the hf CLI. This lets the
